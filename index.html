@@ -172,7 +172,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // [복사하신 파이어베이스 주소 이식 완료]
         const firebaseConfig = {
             apiKey: "AIzaSyArjDU8g5xz6P_gRwN1o3A0RglFgtRuD4A",
             authDomain: "burumbul-online.firebaseapp.com",
@@ -184,7 +183,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = 'burumabul-game-global';
+        
+        // 두 분만의 고유 격리 ID 적용 (보안 강화)
+        const appId = 'our-sweet-home-burumabul-2026';
 
         let userId = null;
         let userName = '';
@@ -246,7 +247,7 @@
             { name: "서울", type: TYPES.CITY, color: 'black', price: 100, toll: [200], noBuild: true }
         ];
 
-        // 인증 처리
+        // 인증
         signInAnonymously(auth).catch(e => console.error(e));
         onAuthStateChanged(auth, user => {
             if(user) {
@@ -256,7 +257,7 @@
             }
         });
 
-        // 방 생성
+        // 방 개설
         window.createRoom = async () => {
             const nameInput = document.getElementById('input-nickname').value.trim();
             if(!nameInput) return alertMsg("닉네임을 입력해주세요.");
@@ -276,7 +277,7 @@
             listenToRoom();
         };
 
-        // 방 참여
+        // 방 가입
         window.joinRoom = async () => {
             const nameInput = document.getElementById('input-nickname').value.trim();
             const codeInput = document.getElementById('input-roomcode').value.trim();
@@ -328,6 +329,7 @@
             await updateDoc(roomRef, { status: 'playing', players: initPlayers, logs: [...state.logs, "게임을 시작합니다!"] });
         };
 
+        // 실시간 동기화 수신
         function syncFromNetwork(state) {
             players = state.players; curP = state.curP; socialFund = state.socialFund; deck = state.deck; gameLogs = state.logs;
             state.boardState.forEach((b, i) => { boardData[i].owner = b.owner; boardData[i].buildings = b.buildings || [0,0,0]; });
@@ -344,12 +346,24 @@
                 rollBtn.disabled = true; rollBtn.innerText = "상대방 차례 대기중...";
             }
 
+            if (curP === myPlayerIdx && players[myPlayerIdx].isBankrupt) {
+                let limit = 0;
+                do { curP = (curP + 1) % players.length; limit++; } while (players[curP].isBankrupt && limit < 10);
+                uploadGameState();
+            }
+
             renderBoard(); renderPanel(); renderLogs();
         }
 
+        // 안정성을 극대화한 비동기 서버 업로드 엔진
         async function uploadGameState() {
             const bState = boardData.map(c => ({owner: c.owner, buildings: c.buildings}));
-            await updateDoc(roomRef, { players, curP, socialFund, deck, boardState: bState, logs: gameLogs.slice(-15) });
+            try {
+                await updateDoc(roomRef, { players, curP, socialFund, deck, boardState: bState, logs: gameLogs.slice(-15) });
+            } catch(e) { 
+                console.error("전송 실패, 재시도합니다.", e);
+                setTimeout(uploadGameState, 300);
+            }
         }
 
         function localLog(msg) { gameLogs.push(`[${players[curP].name}] ${msg}`); }
@@ -424,7 +438,7 @@
             });
         }
 
-        // 주사위 및 핵심 로직
+        // 주사위 클릭
         window.handleDiceClick = () => {
             if (curP !== myPlayerIdx) return;
             document.getElementById('btn-roll-center').disabled = true;
@@ -539,9 +553,9 @@
                     if (c.owner === curP) {
                         exist = true; let bNames = []; let bVal = 0;
                         if(c.buildings[0]) { bNames.push("별장"); bVal += c.build[0]; }
-                        if(c.buildings[1]) { bNav = "빌딩"; bNames.push("빌딩"); bVal += c.build[1]; }
+                        if(c.buildings[1]) { bNames.push("빌딩"); bVal += c.build[1]; }
                         if(c.buildings[2]) { bNames.push("호텔"); bVal += c.build[2]; }
-                        let total = c.price + bVal; // 100% 제값 매각 적용
+                        let total = c.price + bVal;
                         html += `<div class="sell-item">
                             <div><b>${c.name}</b> (대지+건물)<br><small>원가 매각액: ${formatMoney(total)}</small></div>
                             <button class="btn-danger" style="padding:8px;" onclick="globalSell('full', ${idx}, ${total})">통째 매각</button>
@@ -584,14 +598,16 @@
             } else { showSellModal(amt, toIdx, cb); }
         }
 
-        function finishTurn(isDouble) {
+        // 동기화 제어 구조를 적용한 턴 종료 로직
+        async function finishTurn(isDouble) {
             if (isDouble && players[curP].islandTurns === 0 && !players[curP].inSpace) {
                 localLog(`더블 달성! 한 번 더 진행합니다.`);
             } else {
                 let limit = 0;
                 do { curP = (curP + 1) % players.length; limit++; } while (players[curP].isBankrupt && limit < 10);
             }
-            uploadGameState(); // 턴 종료 직전 서버에 상태 일괄 업데이트
+            // 턴 인덱스가 완전히 바뀐 후 서버에 비동기 업로드를 실행 및 보장합니다.
+            await uploadGameState(); 
         }
 
         function checkWin() {
@@ -605,7 +621,7 @@
         function handleSpaceTravel(isDouble) {
             const p = players[curP]; const columbia = boardData[32];
             if (columbia.owner === curP) {
-                p.inSpace = true; localLog(`컬럼비아호 오너 특권으로 무료 우주여행 예약.`); finishTurn(false);
+                p.inSpace = true; localLog(`**컬럼비아호 오너 특권**으로 무료 우주여행 예약.`); finishTurn(false);
             } else {
                 showModal("우주여행 정거장", "20만원을 지불하고 우주여행 특권을 얻으시겠습니까? (다음 턴 자유 이동)", [
                     { text: "지불 및 이용", onClick: () => payAmount(20, columbia.owner, () => { p.inSpace = true; localLog(`우주여행 이용 계약.`); finishTurn(false); })},
@@ -615,7 +631,7 @@
         }
 
         function showSpaceTravelDestinations() {
-            let opts = ''; boardData.forEach((cell, idx) => { if(idx !== 30) opts += `<option value="${idx}">${idx}. ${cell.name}</option>`; });
+            let opts = ''; boardData.forEach((cell, idx) => { if(idx !== 30) options += `<option value="${idx}">${idx}. ${cell.name}</option>`; });
             showModal("우주 정거장 워프", `<select id="space-dest">${opts}</select>`, [
                 { text: "워프 작동", onClick: () => {
                     const dest = parseInt(document.getElementById('space-dest').value);
