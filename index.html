@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>부루마불 온라인</title>
+    <style>
+        :root { --bg-color: #f0f8ff; --board-bg: #222; --cell-bg: #fff; }
+        * { box-sizing: border-box; font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; user-select: none; }
+        
+        body { margin: 0; padding: 10px; background-color: var(--bg-color); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        h1 { margin: 5px 0 10px; font-size: 24px; color: #333; text-align: center; }
+
+        /* 화면 패널들 */
+        .screen-panel { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; margin-top: 50px; }
+        .screen-panel h2 { margin-top: 0; color: #2c3e50; }
+        .screen-panel input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; text-align: center; }
+        .screen-panel button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; margin-bottom: 10px; border-radius: 5px; cursor: pointer; transition: background 0.2s; border: none; color: white;}
+        
+        .btn-primary { background-color: #3498db; }
+        .btn-primary:hover { background-color: #2980b9; }
+        .btn-secondary { background-color: #2ecc71; }
+        .btn-secondary:hover { background-color: #27ae60; }
+        .btn-danger { background-color: #e74c3c; }
+
+        /* 대기실 목록 */
+        .player-list { list-style: none; padding: 0; margin-bottom: 20px; text-align: left; }
+        .player-list li { padding: 10px; background: #f9f9f9; border-left: 5px solid #ccc; margin-bottom: 5px; font-weight: bold; border-radius: 4px; }
+
+        .game-screen { display: none; width: 100%; max-width: 1200px; gap: 15px; flex-wrap: wrap; justify-content: center; }
+
+        /* 상단 상태바 */
+        .header-bar { width: 100%; background: #34495e; color: white; padding: 10px 20px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;}
+
+        /* 반응형 보드판 */
+        .board-container { flex: 1 1 500px; max-width: 800px; width: 100%; aspect-ratio: 1 / 1; position: relative; }
+        .board {
+            width: 100%; height: 100%; display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            grid-template-rows: repeat(11, 1fr);
+            gap: 2px; background-color: var(--board-bg); padding: 2px;
+            border: 4px solid #b22222; border-radius: 8px;
+        }
+
+        .cell {
+            background-color: var(--cell-bg); display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start; text-align: center;
+            font-size: min(1.8vw, 11px); padding: 2px; position: relative; overflow: hidden;
+            border: 1px solid #ccc;
+        }
+        @media (min-width: 800px) { .cell { font-size: 11px; } }
+
+        .cell-name { font-weight: bold; margin-bottom: 2px; word-break: keep-all; line-height: 1.1; }
+        .cell-price { font-size: 0.85em; color: #666; }
+        
+        .corner { background-color: #ffd700; }
+        .gold-key { background-color: #ffe4e1; color: #d2691e; }
+        .color-red { border-top: 4px solid #e74c3c; }
+        .color-yellow { border-top: 4px solid #f1c40f; }
+        .color-green { border-top: 4px solid #2ecc71; }
+        .color-blue { border-top: 4px solid #3498db; }
+        .color-black { border-top: 4px solid #34495e; color: #34495e; font-weight: bold; }
+        .color-vehicle { background-color: #e0f7fa; }
+
+        .center-space {
+            grid-column: 2 / 11; grid-row: 2 / 11; background-color: #cdeacd;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 5px; position: relative; gap: 10px;
+        }
+        .center-space h2 { color: #2e8b57; font-size: min(4vw, 36px); margin: 0; text-align: center; }
+
+        .fund-display { font-size: 16px; font-weight: bold; color: #d35400; background: #fff; padding: 5px 15px; border-radius: 20px; border: 2px solid #d35400; }
+
+        /* 주사위 애니메이션 패널 */
+        .dice-panel { display: flex; gap: 15px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 10px; align-items: center;}
+        .dice { width: 50px; height: 50px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .rolling { animation: roll 0.5s infinite; }
+        @keyframes roll { 0% { transform: rotate(0deg); } 50% { transform: rotate(180deg); } 100% { transform: rotate(360deg); } }
+
+        .btn-roll-center { background-color: #e74c3c; font-size: 20px; padding: 15px 30px; border-radius: 30px; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: white; cursor: pointer; font-weight: bold;}
+        .btn-roll-center:hover { background-color: #c0392b; transform: scale(1.05); }
+        .btn-roll-center:disabled { background-color: #95a5a6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* 플레이어 및 건물 마커 */
+        .players-wrap { position: absolute; bottom: 2px; left: 0; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; }
+        .player-token { width: min(3vw, 16px); height: min(3vw, 16px); border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        .buildings-wrap { font-size: min(2vw, 12px); display: flex; gap: 1px; margin-top: auto; }
+
+        /* 컨트롤 패널 */
+        .controls { flex: 1 1 300px; max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+        .player-card { background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid gray; transition: transform 0.2s; position: relative;}
+        .player-card.active { transform: scale(1.02); border-width: 8px; background: #ffffee; }
+        .player-card h3 { margin: 0 0 5px 0; display: flex; justify-content: space-between; font-size: 16px;}
+        .money { font-weight: bold; color: #2c3e50; font-size: 18px; }
+        .inventory { font-size: 12px; color: #7f8c8d; margin-top: 5px; min-height: 14px;}
+        .my-tag { position: absolute; top: -10px; right: 10px; background: #e74c3c; color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: bold;}
+
+        #log { flex-grow: 1; min-height: 150px; max-height: 250px; overflow-y: auto; background: #222; color: #0f0; padding: 10px; font-size: 13px; border-radius: 5px; font-family: monospace; }
+        #log p { margin: 2px 0; }
+
+        /* 모달 (팝업창) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
+        .modal { background: white; padding: 25px; border-radius: 10px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; }
+        .modal h3 { margin-top: 0; color: #333; }
+        .modal p { color: #555; line-height: 1.5; font-size: 15px; margin-bottom: 20px;}
+        .modal-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .modal-buttons button { flex: 1 1 120px; padding: 12px; font-weight: bold; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        
+        .sell-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 5px; text-align: left;}
+        select { padding: 10px; font-size: 16px; width: 100%; margin-bottom: 15px; border-radius: 5px;}
+    </style>
+</head>
+<body>
+
+    <!-- 1. 인증 화면 -->
+    <div class="screen-panel" id="auth-screen">
+        <h2>서버 연결 중...</h2>
+        <p>인증 정보를 확인하고 있습니다.</p>
+    </div>
+
+    <!-- 2. 로비 화면 (방 생성/접속) -->
+    <div class="screen-panel" id="lobby-screen" style="display: none;">
+        <h2>부루마불 온라인 🌐</h2>
+        <input type="text" id="input-nickname" placeholder="사용할 닉네임 입력" value="플레이어">
+        <button class="btn-primary" onclick="createRoom()">새로운 방 만들기</button>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <input type="text" id="input-roomcode" placeholder="4자리 방 번호 입력" maxlength="4">
+        <button class="btn-secondary" onclick="joinRoom()">방 접속하기</button>
+    </div>
+
+    <!-- 3. 대기실 화면 -->
+    <div class="screen-panel" id="waiting-screen" style="display: none;">
+        <h2>대기실 (방 번호: <span id="display-roomcode" style="color:#e74c3c;"></span>)</h2>
+        <p>친구들에게 방 번호를 알려주세요!</p>
+        <ul class="player-list" id="lobby-player-list"></ul>
+        <button class="btn-primary" id="btn-start-game" onclick="startGame()" style="display:none;">게임 시작 (방장 전용)</button>
+        <p id="waiting-msg" style="color:#7f8c8d; font-size:14px;">방장이 게임을 시작할 때까지 대기해주세요...</p>
+    </div>
+
+    <!-- 4. 게임 화면 -->
+    <div class="game-screen" id="game-screen">
+        <div class="header-bar">
+            <span>방: <span id="header-roomcode"></span></span>
+            <span id="header-turn-info" style="color:#f1c40f;"></span>
+            <span>내 닉네임: <span id="header-nickname"></span></span>
+        </div>
+
+        <div class="board-container">
+            <div class="board" id="board">
+                <div class="center-space">
+                    <h2>BLUE MARBLE</h2>
+                    <div class="fund-display">복지기금: <span id="fund-amount">0</span></div>
+                    
+                    <div class="dice-panel">
+                        <div class="dice" id="dice1">1</div>
+                        <div class="dice" id="dice2">1</div>
+                    </div>
+                    <button id="btn-roll-center" class="btn-roll-center" onclick="handleDiceClick()">내 턴! 주사위 굴리기</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div id="players-info"></div>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <!-- 공통 모달 -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="modal-content">
+            <h3 id="modal-title">알림</h3>
+            <div id="modal-body"></div>
+            <div class="modal-buttons" id="modal-buttons"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        // 환경 변수 설정
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // 글로벌 상태 변수
+        let userId = null;
+        let userName = '';
+        let roomCode = null;
+        let roomRef = null;
+        let isHost = false;
+        let myPlayerIdx = -1;
+
+        // 게임 상태 (DB와 동기화됨)
+        let players = [];
+        let curP = 0;
+        let socialFund = 0;
+        let deck = [];
+        let gameLogs = [];
+        
+        const colors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71'];
+        const formatMoney = (m) => new Intl.NumberFormat('ko-KR').format(m * 10000) + '원';
+        const TYPES = { START: 0, CITY: 1, KEY: 2, ISLAND: 3, TRAVEL: 4, FUND_RECV: 5, FUND_PAY: 6, TAX: 7 };
+        
+        // 보드판 기초 데이터 (UI 및 정적 스펙)
+        const boardData = [
+            { name: "출발", type: TYPES.START },
+            { name: "타이베이", type: TYPES.CITY, color: 'red', price: 5, build: [5, 15, 25], toll: [0.2, 1, 9, 25] },
+            { name: "황금열쇠", type: TYPES.KEY },
+            { name: "베이징", type: TYPES.CITY, color: 'red', price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45] },
+            { name: "마닐라", type: TYPES.CITY, color: 'red', price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45] },
+            { name: "제주도", type: TYPES.CITY, color: 'black', price: 20, toll: [30], noBuild: true },
+            { name: "싱가폴", type: TYPES.CITY, color: 'red', price: 10, build: [5, 15, 25], toll: [0.6, 3, 27, 55] },
+            { name: "황금열쇠", type: TYPES.KEY },
+            { name: "카이로", type: TYPES.CITY, color: 'red', price: 10, build: [5, 15, 25], toll: [0.6, 3, 27, 55] },
+            { name: "이스탄불", type: TYPES.CITY, color: 'red', price: 12, build: [5, 15, 25], toll: [0.8, 4, 30, 60] },
+            { name: "무인도", type: TYPES.ISLAND },
+            { name: "아테네", type: TYPES.CITY, color: 'yellow', price: 14, build: [10, 30, 50], toll: [1, 5, 45, 75] },
+            { name: "황금열쇠", type: TYPES.KEY },
+            { name: "코펜하겐", type: TYPES.CITY, color: 'yellow', price: 16, build: [10, 30, 50], toll: [1.2, 6, 50, 90] },
+            { name: "스톡홀름", type: TYPES.CITY, color: 'yellow', price: 16, build: [10, 30, 50], toll: [1.2, 6, 50, 90] },
+            { name: "콩코드 여객기", type: TYPES.CITY, color: 'vehicle', price: 20, toll: [30], noBuild: true },
+            { name: "베른", type: TYPES.CITY, color: 'yellow', price: 18, build: [10, 30, 50], toll: [1.4, 7, 50, 95] },
+            { name: "황금열쇠", type: TYPES.KEY },
+            { name: "베를린", type: TYPES.CITY, color: 'yellow', price: 18, build: [10, 30, 50], toll: [1.4, 7, 50, 95] },
+            { name: "오타와", type: TYPES.CITY, color: 'yellow', price: 20, build: [10, 30, 50], toll: [1.6, 8, 55, 100] },
+            { name: "사회복지기금", type: TYPES.FUND_RECV },
+            { name: "부에노스<br>아이레스", type: TYPES.CITY, color: 'green', price: 22, build: [15, 45, 75], toll: [1.8, 9, 70, 105] },
+            { name: "황금열쇠", type: TYPES.KEY },
+            { name: "상파울루", type: TYPES.CITY, color: 'green', price: 24, build: [15, 45, 75], toll: [2, 10, 75, 110] },
+            { name: "시드니", type: TYPES.CITY, color: 'green', price: 24, build: [15, 45, 75], toll: [2, 10, 75, 110] },
+            { name: "부산", type: TYPES.CITY, color: 'black', price: 50, toll: [60], noBuild: true },
+            { name: "하와이", type: TYPES.CITY, color: 'green', price: 26, build: [15, 45, 75], toll: [2.2, 11, 80, 115] },
+            { name: "리스본", type: TYPES.CITY, color: 'green', price: 26, build: [15, 45, 75], toll: [2.2, 11, 80, 115] },
+            { name: "퀸엘리자베스호", type: TYPES.CITY, color: 'vehicle', price: 30, toll: [25], noBuild: true },
+            { name: "마드리드", type: TYPES.CITY, color: 'green', price: 28, build: [15, 45, 75], toll: [2.4, 12, 85, 120] },
+            { name: "우주여행", type: TYPES.TRAVEL },
+            { name: "도쿄", type: TYPES.CITY, color: 'blue', price: 30, build: [20, 60, 100], toll: [2.6, 13, 90, 127] },
+            { name: "컬럼비아호", type: TYPES.CITY, color: 'vehicle', price: 45, toll: [40], noBuild: true },
+            { name: "파리", type: TYPES.CITY, color: 'blue', price: 32, build: [20, 60, 100], toll: [2.8, 15, 100, 140] },
+            { name: "로마", type: TYPES.CITY, color: 'blue', price: 32, build: [20, 60, 100], toll: [2.8, 15, 100, 140] },
+            { name: "황금열쇠", type: TYPES.KEY },
+            { name: "런던", type: TYPES.CITY, color: 'blue', price: 35, build: [20, 60, 100], toll: [3.5, 17, 110, 150] },
+            { name: "뉴욕", type: TYPES.CITY, color: 'blue', price: 35, build: [20, 60, 100], toll: [3.5, 17, 110, 150] },
+            { name: "국세청", type: TYPES.TAX },
+            { name: "서울", type: TYPES.CITY, color: 'black', price: 100, toll: [200], noBuild: true }
+        ];
+
+        // === 1. 파이어베이스 및 인증 초기화 ===
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch(e) { 
+                console.error("Auth error", e); 
+                alert("인증 오류가 발생했습니다.");
+            }
+        };
+
+        onAuthStateChanged(auth, user => {
+            if(user) {
+                userId = user.uid;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('lobby-screen').style.display = 'block';
+            }
+        });
+        
+        // App Load 시점 실행
+        initAuth();
+
+        // === 2. 로비 / 방 시스템 ===
+        window.createRoom = async () => {
+            const nameInput = document.getElementById('input-nickname').value.trim();
+            if(!nameInput) return alertMsg("닉네임을 입력해주세요.");
+            userName = nameInput;
+
+            roomCode = Math.floor(1000 + Math.random() * 9000).toString(); // 4자리 번호
+            roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'burumabul_rooms', roomCode);
+            isHost = true;
+
+            const initialState = {
+                status: 'waiting',
+                players: [{ uid: userId, name: userName, color: colors[0], money: 600, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false }],
+                curP: 0,
+                socialFund: 0,
+                boardState: Array(40).fill({owner: null, buildings: [0,0,0]}),
+                deck: createDeck(),
+                logs: [`방(${roomCode})이 생성되었습니다.`]
+            };
+
+            await setDoc(roomRef, initialState);
+            listenToRoom();
+        };
+
+        window.joinRoom = async () => {
+            const nameInput = document.getElementById('input-nickname').value.trim();
+            const codeInput = document.getElementById('input-roomcode').value.trim();
+            if(!nameInput) return alertMsg("닉네임을 입력해주세요.");
+            if(!codeInput || codeInput.length !== 4) return alertMsg("4자리 방 번호를 올바르게 입력해주세요.");
+
+            userName = nameInput;
+            roomCode = codeInput;
+            roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'burumabul_rooms', roomCode);
+
+            try {
+                const docSnap = await getDoc(roomRef);
+                if(!docSnap.exists()) return alertMsg("존재하지 않는 방입니다.");
+                
+                const state = docSnap.data();
+                if(state.status !== 'waiting') return alertMsg("이미 게임이 시작된 방입니다.");
+                if(state.players.length >= 4) return alertMsg("방이 꽉 찼습니다 (최대 4인).");
+                if(state.players.find(p => p.uid === userId)) return alertMsg("이미 접속된 기기입니다.");
+
+                const newPlayer = { uid: userId, name: userName, color: colors[state.players.length], money: 600, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false };
+                await updateDoc(roomRef, { players: [...state.players, newPlayer] });
+                listenToRoom();
+            } catch(e) { console.error(e); alertMsg("접속 중 오류가 발생했습니다."); }
+        };
+
+        // 방 상태 실시간 감지 (멀티플레이의 핵심)
+        function listenToRoom() {
+            document.getElementById('lobby-screen').style.display = 'none';
+            document.getElementById('waiting-screen').style.display = 'block';
+            document.getElementById('display-roomcode').innerText = roomCode;
+
+            onSnapshot(roomRef, (docSnap) => {
+                if(!docSnap.exists()) return;
+                const state = docSnap.data();
+                
+                // 내 인덱스 파악
+                myPlayerIdx = state.players.findIndex(p => p.uid === userId);
+
+                if(state.status === 'waiting') {
+                    renderWaitingRoom(state.players);
+                } else if (state.status === 'playing') {
+                    document.getElementById('waiting-screen').style.display = 'none';
+                    document.getElementById('game-screen').style.display = 'flex';
+                    syncFromNetwork(state);
+                }
+            }, (err) => console.error(err));
+        }
+
+        function renderWaitingRoom(pList) {
+            const ul = document.getElementById('lobby-player-list');
+            ul.innerHTML = pList.map((p, i) => `<li style="border-left-color:${p.color}">${p.name} ${i===0 ? '(방장)' : ''} ${p.uid === userId ? '(나)' : ''}</li>`).join('');
+            
+            if(isHost) {
+                document.getElementById('btn-start-game').style.display = 'block';
+                document.getElementById('waiting-msg').style.display = 'none';
+            }
+        }
+
+        // 호스트 전용: 게임 시작
+        window.startGame = async () => {
+            if(!isHost) return;
+            const docSnap = await getDoc(roomRef);
+            const state = docSnap.data();
+            
+            if(state.players.length < 2) return alertMsg("최소 2명 이상의 플레이어가 필요합니다.");
+
+            // 시작 금액 설정 (2인=600, 3~4인=300)
+            const startMoney = state.players.length === 2 ? 600 : 300;
+            const initPlayers = state.players.map(p => ({...p, money: startMoney}));
+
+            await updateDoc(roomRef, {
+                status: 'playing',
+                players: initPlayers,
+                logs: [...state.logs, "주사위를 굴려 게임을 시작하세요!"]
+            });
+        };
+
+        // === 3. 상태 동기화 및 렌더링 로직 ===
+        function syncFromNetwork(state) {
+            players = state.players;
+            curP = state.curP;
+            socialFund = state.socialFund;
+            deck = state.deck;
+            gameLogs = state.logs;
+
+            // 보드 상태 병합
+            state.boardState.forEach((bState, i) => {
+                boardData[i].owner = bState.owner;
+                boardData[i].buildings = bState.buildings || [0,0,0];
+            });
+
+            // UI 업데이트
+            document.getElementById('header-roomcode').innerText = roomCode;
+            document.getElementById('header-nickname').innerText = userName;
+            document.getElementById('header-turn-info').innerText = `[ ${players[curP].name}의 턴 ]`;
+            document.getElementById('fund-amount').innerText = formatMoney(socialFund);
+
+            // 주사위 버튼 컨트롤
+            const rollBtn = document.getElementById('btn-roll-center');
+            if (curP === myPlayerIdx && !players[myPlayerIdx].isBankrupt) {
+                rollBtn.disabled = false;
+                rollBtn.innerText = "내 턴! 주사위 굴리기 🎲";
+                rollBtn.style.backgroundColor = "#e74c3c";
+            } else {
+                rollBtn.disabled = true;
+                rollBtn.innerText = "상대방 턴 대기중...";
+                rollBtn.style.backgroundColor = "#95a5a6";
+            }
+
+            // 만약 턴이 나한테 넘어왔는데 내가 파산상태면 자동 패스
+            if (curP === myPlayerIdx && players[myPlayerIdx].isBankrupt) {
+                syncAction(async () => {
+                    let limit = 0;
+                    do { curP = (curP + 1) % players.length; limit++; } while (players[curP].isBankrupt && limit < 10);
+                });
+            }
+
+            renderBoard();
+            renderPlayersPanel();
+            renderLogs();
+        }
+
+        // 상태를 DB에 기록하는 래퍼 함수 (모든 로컬 변경사항 저장)
+        async function syncAction(actionFn) {
+            if(myPlayerIdx !== curP) return; // 내 턴이 아니면 DB 기록 차단
+            
+            // 로컬 액션 수행
+            await actionFn();
+            
+            // DB 업데이트
+            try {
+                const bState = boardData.map(c => ({owner: c.owner, buildings: c.buildings}));
+                await updateDoc(roomRef, {
+                    players: players,
+                    curP: curP,
+                    socialFund: socialFund,
+                    deck: deck,
+                    boardState: bState,
+                    logs: gameLogs.slice(-15) // 최근 15개만 유지
+                });
+            } catch(e) { console.error("Sync Error", e); }
+        }
+
+        function localLog(msg) {
+            const pName = players[curP] ? players[curP].name : '시스템';
+            gameLogs.push(`[${pName}] ${msg}`);
+        }
+
+        function renderLogs() {
+            const l = document.getElementById('log');
+            l.innerHTML = gameLogs.map(g => `<p>> ${g}</p>`).join('');
+            l.scrollTop = l.scrollHeight;
+        }
+
+        // 보드판 렌더링
+        let boardInitialized = false;
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            if (!boardInitialized) {
+                document.querySelectorAll('.cell').forEach(e => e.remove());
+                boardData.forEach((data, i) => {
+                    const cell = document.createElement('div');
+                    cell.className = `cell`;
+                    if(i % 10 === 0) cell.classList.add('corner');
+                    if(data.type === TYPES.KEY) cell.classList.add('gold-key');
+                    if(data.color) cell.classList.add(`color-${data.color}`);
+                    cell.id = `cell-${i}`;
+                    
+                    let row, col;
+                    if (i < 10) { row = 11; col = 11 - i; }
+                    else if (i < 20) { row = 21 - i; col = 1; }
+                    else if (i < 30) { row = 1; col = i - 19; }
+                    else { row = i - 29; col = 11; }
+                    cell.style.gridRow = row; cell.style.gridColumn = col;
+                    
+                    boardEl.appendChild(cell);
+                });
+                boardInitialized = true;
+            }
+
+            // 동적 데이터 갱신
+            boardData.forEach((data, i) => {
+                const cell = document.getElementById(`cell-${i}`);
+                let titleHtml = `<div class="cell-name">${data.name}</div>`;
+                let priceHtml = '';
+                
+                if (data.type === TYPES.CITY) {
+                    if (data.owner !== null) {
+                        let currentToll = getToll(i);
+                        priceHtml = `<div class="cell-price" style="color:${players[data.owner].color}">대여료:<br>${formatMoney(currentToll)}</div>`;
+                        cell.style.backgroundColor = players[data.owner].color + '33';
+                    } else {
+                        priceHtml = `<div class="cell-price">구입:<br>${formatMoney(data.price)}</div>`;
+                        cell.style.backgroundColor = 'var(--cell-bg)';
+                    }
+                }
+
+                let bStr = '';
+                if(data.buildings) {
+                    if(data.buildings[0]) bStr += '🏠';
+                    if(data.buildings[1]) bStr += '🏢';
+                    if(data.buildings[2]) bStr += '🏨';
+                }
+
+                cell.innerHTML = titleHtml + priceHtml + `
+                    <div class="buildings-wrap">${bStr}</div>
+                    <div class="players-wrap" id="players-${i}"></div>
+                `;
+            });
+
+            // 플레이어 말 배치
+            players.forEach((p, idx) => {
+                if(p.isBankrupt) return;
+                const token = document.createElement('div');
+                token.className = 'player-token';
+                token.style.backgroundColor = p.color;
+                document.getElementById(`players-${p.pos}`).appendChild(token);
+            });
+        }
+
+        function renderPlayersPanel() {
+            const pInfo = document.getElementById('players-info');
+            pInfo.innerHTML = '';
+            players.forEach((p, idx) => {
+                if(p.isBankrupt) return;
+                let inven = [];
+                if(p.items.free_pass > 0) inven.push(`우대권x${p.items.free_pass}`);
+                if(p.items.island_card > 0) inven.push(`무전기x${p.items.island_card}`);
+
+                pInfo.innerHTML += `
+                    <div class="player-card ${idx === curP ? 'active' : ''}" style="border-left-color: ${p.color}">
+                        ${idx === myPlayerIdx ? '<div class="my-tag">나</div>' : ''}
+                        <h3>${p.name} <span class="money">${formatMoney(p.money)}</span></h3>
+                        <div class="inventory">${inven.length > 0 ? '보유: ' + inven.join(', ') : '아이템 없음'}</div>
+                    </div>
+                `;
+            });
+        }
+
+        // === 4. 게임 핵심 로직 ===
+        
+        window.handleDiceClick = () => {
+            if (curP !== myPlayerIdx) return;
+            document.getElementById('btn-roll-center').disabled = true;
+
+            const p = players[curP];
+            
+            // 무인도 체크
+            if (p.islandTurns > 0) {
+                rollDiceAnimation((d1, d2) => {
+                    syncAction(() => {
+                        if (d1 === d2) {
+                            localLog(`더블(${d1},${d2})! 무인도 탈출!`);
+                            p.islandTurns = 0;
+                            movePlayer(d1 + d2, true);
+                        } else {
+                            p.islandTurns--;
+                            localLog(`무인도 갇힘 (${d1},${d2}). 남은 턴: ${p.islandTurns}`);
+                            finishTurn(false);
+                        }
+                    });
+                });
+                return;
+            }
+
+            // 우주여행 대기 체크
+            if (p.inSpace) {
+                showSpaceTravelDestinations();
+                return; // syncAction is called inside the destination selector
+            }
+
+            // 일반 주사위
+            rollDiceAnimation((d1, d2) => {
+                const total = d1 + d2;
+                const isDouble = (d1 === d2);
+                syncAction(() => {
+                    localLog(`주사위 🎲 ${d1}, ${d2} (이동: ${total}) ${isDouble ? '[더블]' : ''}`);
+                    movePlayer(total, isDouble);
+                });
+            });
+        };
+
+        function rollDiceAnimation(callback) {
+            const d1El = document.getElementById('dice1');
+            const d2El = document.getElementById('dice2');
+            d1El.classList.add('rolling');
+            d2El.classList.add('rolling');
+            
+            let d1 = 1, d2 = 1;
+            let interval = setInterval(() => {
+                d1El.innerText = Math.floor(Math.random() * 6) + 1;
+                d2El.innerText = Math.floor(Math.random() * 6) + 1;
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                d1El.classList.remove('rolling');
+                d2El.classList.remove('rolling');
+                d1 = Math.floor(Math.random() * 6) + 1;
+                d2 = Math.floor(Math.random() * 6) + 1;
+                d1El.innerText = d1;
+                d2El.innerText = d2;
+                callback(d1, d2);
+            }, 600);
+        }
+
+        function movePlayer(amount, isDouble, forceMove = false) {
+            const p = players[curP];
+            let newPos = p.pos + amount;
+
+            if (newPos >= 40 || (forceMove && newPos < p.pos && newPos !== 10)) { 
+                if(newPos !== 10) { 
+                    p.money += 20; 
+                    localLog(`출발선 통과! 월급 20만원 수령.`);
+                }
+                newPos = newPos % 40;
+            } else if (newPos < 0) {
+                newPos = 40 + newPos;
+            }
+
+            p.pos = newPos;
+            handleCellAction(isDouble);
+        }
+
+        function finishTurn(isDouble) {
+            if (isDouble && players[curP].islandTurns === 0 && !players[curP].inSpace) {
+                localLog(`더블! 주사위를 한 번 더 굴립니다.`);
+            } else {
+                let limit = 0;
+                do {
+                    curP = (curP + 1) % players.length;
+                    limit++;
+                } while (players[curP].isBankrupt && limit < 10);
+            }
+        }
+
+        // 모달 헬퍼 (로컬 UI)
+        function showModal(title, contentHTML, buttonsArr) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = contentHTML;
+            
+            const btnWrap = document.getElementById('modal-buttons');
+            btnWrap.innerHTML = '';
+            
+            buttonsArr.forEach(b => {
+                const btn = document.createElement('button');
+                btn.innerText = b.text;
+                btn.className = b.class || 'btn-primary';
+                btn.onclick = () => {
+                    document.getElementById('modal-overlay').style.display = 'none';
+                    b.onClick();
+                };
+                btnWrap.appendChild(btn);
+            });
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
+        function alertMsg(msg) {
+            showModal("알림", `<p>${msg}</p>`, [{ text: "확인", onClick: () => {} }]);
+        }
+
+        // 지불 래퍼
+        function payAmount(amount, toPlayerIdx, successCallback) {
+            const p = players[curP];
+            if (p.money >= amount) {
+                p.money -= amount;
+                if(toPlayerIdx !== null && toPlayerIdx !== 'fund') players[toPlayerIdx].money += amount;
+                else if (toPlayerIdx === 'fund') socialFund += amount;
+                successCallback();
+            } else {
+                showSellModal(amount, toPlayerIdx, successCallback);
+            }
+        }
+
+        function handleCellAction(isDouble) {
+            const p = players[curP];
+            const cell = boardData[p.pos];
+            
+            if (cell.type === TYPES.START) {
+                finishTurn(isDouble);
+            }
+            else if (cell.type === TYPES.ISLAND) {
+                localLog(`무인도 도착. 3턴 휴식.`);
+                p.islandTurns = 3;
+                finishTurn(false);
+            }
+            else if (cell.type === TYPES.TAX || cell.type === TYPES.FUND_PAY) {
+                const tax = 15;
+                showModal("세금 납부", `기금/국세청에 ${formatMoney(tax)}을 납부해야 합니다.`, [
+                    { text: "납부", onClick: () => syncAction(() => {
+                        payAmount(tax, 'fund', () => {
+                            localLog(`복지기금 ${formatMoney(tax)} 납부 완료.`);
+                            finishTurn(isDouble);
+                        });
+                    })}
+                ]);
+            }
+            else if (cell.type === TYPES.FUND_RECV) {
+                if (socialFund > 0) {
+                    p.money += socialFund;
+                    localLog(`모인 사회복지기금 ${formatMoney(socialFund)} 수령!`);
+                    socialFund = 0;
+                }
+                finishTurn(isDouble);
+            }
+            else if (cell.type === TYPES.TRAVEL) {
+                handleSpaceTravel(isDouble);
+            }
+            else if (cell.type === TYPES.KEY) {
+                drawGoldenKey(isDouble);
+            }
+            else if (cell.type === TYPES.CITY) {
+                handleCity(cell, isDouble);
+            }
+        }
+
+        function getToll(cellIdx) {
+            const cell = boardData[cellIdx];
+            if(cell.noBuild) return cell.toll[0]; 
+            
+            if(cell.buildings[2]) return cell.toll[3]; // 호텔
+            if(cell.buildings[1]) return cell.toll[2]; // 빌딩
+            if(cell.buildings[0]) return cell.toll[1]; // 별장
+            return cell.toll[0]; // 대지만
+        }
+
+        function handleCity(cell, isDouble) {
+            const p = players[curP];
+            
+            // 빈 땅 구매
+            if (cell.owner === null) {
+                if (p.money >= cell.price) {
+                    showModal(`도시 구매`, `<b>${cell.name}</b> 도착!<br>대지 구매가: ${formatMoney(cell.price)}`, [
+                        { text: "구매", onClick: () => syncAction(() => {
+                            payAmount(cell.price, null, () => {
+                                cell.owner = curP;
+                                localLog(`${cell.name} 구매!`);
+                                finishTurn(isDouble);
+                            });
+                        })},
+                        { text: "통과", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) }
+                    ]);
+                } else {
+                    syncAction(() => finishTurn(isDouble));
+                }
+                return;
+            }
+
+            // 내 땅 (건물)
+            if (cell.owner === curP) {
+                if (cell.noBuild || cell.buildings[2] === 1) { syncAction(() => finishTurn(isDouble)); return; }
+                
+                let html = `현재 잔고: ${formatMoney(p.money)}<br><br>`;
+                let opts = [];
+                if (!cell.buildings[0] && p.money >= cell.build[0]) opts.push({t:0, c:cell.build[0], n:'별장'});
+                if (!cell.buildings[1] && p.money >= cell.build[1]) opts.push({t:1, c:cell.build[1], n:'빌딩'});
+                if (!cell.buildings[2] && p.money >= cell.build[2]) opts.push({t:2, c:cell.build[2], n:'호텔'});
+
+                if(opts.length === 0) { syncAction(() => finishTurn(isDouble)); return; }
+
+                const btns = opts.map(o => ({
+                    text: `${o.n} (${formatMoney(o.c)})`,
+                    onClick: () => syncAction(() => {
+                        payAmount(o.c, null, () => {
+                            cell.buildings[o.t] = 1;
+                            localLog(`${cell.name}에 ${o.n} 건설!`);
+                            finishTurn(isDouble);
+                        });
+                    })
+                }));
+                btns.push({ text: "종료", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) });
+                showModal("건물 건설", html, btns);
+                return;
+            }
+
+            // 남의 땅 (통행료)
+            const toll = getToll(p.pos);
+            const ownerName = players[cell.owner].name;
+            
+            const processToll = () => syncAction(() => {
+                payAmount(toll, cell.owner, () => {
+                    localLog(`${ownerName}에게 통행료 ${formatMoney(toll)} 지불.`);
+                    finishTurn(isDouble);
+                });
+            });
+
+            if (p.items.free_pass > 0) {
+                showModal("통행료 지불", `${ownerName}의 ${cell.name} 도착!<br>통행료: ${formatMoney(toll)}<br>우대권을 사용하시겠습니까?`, [
+                    { text: "우대권 사용", class:"btn-secondary", onClick: () => syncAction(() => {
+                        p.items.free_pass--;
+                        localLog(`우대권 사용! 통행료 면제.`);
+                        finishTurn(isDouble);
+                    })},
+                    { text: "현금 지불", class: "btn-danger", onClick: processToll }
+                ]);
+            } else {
+                showModal("통행료 지불", `${ownerName}의 ${cell.name} 도착!<br>통행료: ${formatMoney(toll)}`, [
+                    { text: "지불", class: "btn-danger", onClick: processToll }
+                ]);
+            }
+        }
+
+        // 매각 및 파산 시스템 (원가 매각 반영)
+        function showSellModal(debtAmount, toPlayerIdx, successCallback) {
+            const p = players[curP];
+            
+            const renderItems = () => {
+                if (p.money >= debtAmount) {
+                    document.getElementById('modal-overlay').style.display = 'none';
+                    payAmount(debtAmount, toPlayerIdx, successCallback); // 다시 래퍼 호출
+                    return;
+                }
+
+                let html = `<p style="color:#e74c3c; font-weight:bold;">채무액: ${formatMoney(debtAmount)} / 잔고: ${formatMoney(p.money)}</p>`;
+                let hasAssets = false;
+
+                boardData.forEach((cell, idx) => {
+                    if (cell.owner === curP) {
+                        hasAssets = true;
+                        let bldNames = []; let bVal = 0;
+                        if(cell.buildings[0]) { bldNames.push("별장"); bVal += cell.build[0]; }
+                        if(cell.buildings[1]) { bldNames.push("빌딩"); bVal += cell.build[1]; }
+                        if(cell.buildings[2]) { bldNames.push("호텔"); bVal += cell.build[2]; }
+                        
+                        // 제값(원가 100%)에 매각
+                        let totalVal = cell.price + bVal;
+
+                        html += `<div class="sell-item">
+                            <div><b>${cell.name}</b> (대지+${bldNames.join(',')})<br><small>매각가: ${formatMoney(totalVal)}</small></div>
+                            <button class="btn-danger" style="padding:8px;" onclick="executeSell('full', ${idx}, ${totalVal})">매각</button>
+                        </div>`;
+                        
+                        if (bldNames.length > 0) {
+                            let topBldIdx = cell.buildings[2] ? 2 : (cell.buildings[1] ? 1 : 0);
+                            let bPrice = cell.build[topBldIdx];
+                            let bName = topBldIdx === 2 ? '호텔' : (topBldIdx === 1 ? '빌딩' : '별장');
+                            html += `<div class="sell-item" style="background:#fff3cd;">
+                                <div>└ [건물만] <b>${bName}</b> 매각<br><small>매각가: ${formatMoney(bPrice)}</small></div>
+                                <button class="btn-danger" style="padding:8px;" onclick="executeSell('bld', ${idx}, ${bPrice}, ${topBldIdx})">건물매각</button>
+                            </div>`;
+                        }
+                    }
+                });
+
+                if (!hasAssets) {
+                     document.getElementById('modal-overlay').style.display = 'none';
+                     localLog(`🚨 파산!`);
+                     p.isBankrupt = true;
+                     boardData.forEach(c => { if(c.owner === curP) c.owner = (toPlayerIdx === 'fund' ? null : toPlayerIdx); });
+                     if(toPlayerIdx !== null && toPlayerIdx !== 'fund') players[toPlayerIdx].money += p.money;
+                     checkWin();
+                } else {
+                     document.getElementById('modal-body').innerHTML = html;
+                }
+            };
+
+            window.executeSell = (type, id, price, bIdx) => syncAction(async () => {
+                p.money += price;
+                if (type === 'full') {
+                    boardData[id].owner = null; boardData[id].buildings = [0,0,0];
+                } else if (type === 'bld') {
+                    boardData[id].buildings[bIdx] = 0;
+                }
+                renderItems(); // 로컬 갱신 후 다시 판단
+            });
+
+            document.getElementById('modal-title').innerText = "자산 매각";
+            document.getElementById('modal-buttons').innerHTML = ''; 
+            document.getElementById('modal-overlay').style.display = 'flex';
+            renderItems();
+        }
+
+        function checkWin() {
+            const activePlayers = players.filter(p => !p.isBankrupt);
+            if(activePlayers.length === 1) {
+                showModal("🏆 게임 종료!", `최후의 승자는 <b>${activePlayers[0].name}</b> 입니다!`, [
+                    { text: "확인", onClick: () => {} }
+                ]);
+            } else {
+                finishTurn(false);
+            }
+        }
+
+        // 우주여행
+        function handleSpaceTravel(isDouble) {
+            const p = players[curP];
+            const columbia = boardData[32];
+            const travelFee = 20;
+
+            if (p.freeSpaceTravel) {
+                syncAction(() => {
+                    p.freeSpaceTravel = false; p.inSpace = true;
+                    localLog(`황금열쇠 특권으로 우주여행 준비 완료.`);
+                    finishTurn(false);
+                });
+                return;
+            }
+
+            if (columbia.owner === curP) {
+                syncAction(() => {
+                    p.inSpace = true;
+                    localLog(`컬럼비아호 소유자 무료 우주여행 준비!`);
+                    finishTurn(false);
+                });
+            } else {
+                const ownerName = columbia.owner !== null ? players[columbia.owner].name : "은행";
+                showModal("우주여행", `이용료 ${formatMoney(travelFee)}을 지불하고 우주여행을 대기하시겠습니까?`, [
+                    { text: "지불 후 탑승", onClick: () => syncAction(() => {
+                        payAmount(travelFee, columbia.owner, () => {
+                            p.inSpace = true;
+                            localLog(`우주여행 탑승 완료!`);
+                            finishTurn(false);
+                        });
+                    })},
+                    { text: "탑승 안함", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) }
+                ]);
+            }
+        }
+
+        function showSpaceTravelDestinations() {
+            const p = players[curP];
+            let options = '';
+            boardData.forEach((cell, idx) => { if(idx !== 30) options += `<option value="${idx}">${idx}. ${cell.name}</option>`; });
+
+            showModal("우주여행 목적지 선택", `<select id="space-dest">${options}</select>`, [
+                { text: "이동", onClick: () => syncAction(() => {
+                    const dest = parseInt(document.getElementById('space-dest').value);
+                    p.inSpace = false;
+                    localLog(`🚀 우주여행 출발 -> ${boardData[dest].name}`);
+                    movePlayer(dest - p.pos, false, true); // 목적지로 점프
+                })}
+            ]);
+        }
+
+        // 황금열쇠 시스템
+        function createDeck() {
+            return [
+                { type: 'move', target: 0, desc: '고속도로: 출발지로 바로 이동' },
+                { type: 'move', target: 39, desc: '관광여행: 서울로 이동' },
+                { type: 'island', desc: '무인도로 가시오' },
+                { type: 'money', val: 30, desc: '노벨 평화상: 30만원 수령' },
+                { type: 'pay', val: 5, desc: '과속운전: 벌금 5만원 지불' },
+                { type: 'sale_half', desc: '반액대매출: 가장 비싼 자산 반값 강제 매각' },
+                { type: 'item', item: 'free_pass', desc: '우대권 획득! (통행료 1회 면제)' },
+                { type: 'item', item: 'free_pass', desc: '우대권 획득! (통행료 1회 면제)' }
+            ].sort(() => Math.random() - 0.5); // 섞기
+        }
+
+        function drawGoldenKey(isDouble) {
+            syncAction(() => {
+                if(deck.length === 0) deck = createDeck();
+                const card = deck.pop();
+                
+                showModal("🔑 황금열쇠", `<b>${card.desc}</b>`, [
+                    { text: "확인", onClick: () => syncAction(() => executeGoldenKey(card, isDouble)) }
+                ]);
+            });
+        }
+
+        function executeGoldenKey(card, isDouble) {
+            const p = players[curP];
+            if (card.type === 'move') { movePlayer(card.target - p.pos, false, true); }
+            else if (card.type === 'island') { p.pos = 10; p.islandTurns = 3; finishTurn(false); }
+            else if (card.type === 'money') { p.money += card.val; finishTurn(isDouble); }
+            else if (card.type === 'pay') { payAmount(card.val, 'fund', () => finishTurn(isDouble)); }
+            else if (card.type === 'item') { p.items[card.item]++; finishTurn(isDouble); }
+            else if (card.type === 'sale_half') {
+                let maxVal = -1; let targetIdx = -1;
+                boardData.forEach((c, idx) => {
+                    if (c.owner === curP) {
+                        let val = c.price;
+                        if(c.buildings) val += c.build[0]*c.buildings[0] + c.build[1]*c.buildings[1] + c.build[2]*c.buildings[2];
+                        if (val > maxVal) { maxVal = val; targetIdx = idx; }
+                    }
+                });
+                if (targetIdx !== -1) {
+                    const half = Math.floor(maxVal / 2);
+                    boardData[targetIdx].owner = null; boardData[targetIdx].buildings = [0,0,0];
+                    p.money += half;
+                    localLog(`가장 비싼 ${boardData[targetIdx].name}가 반값(${formatMoney(half)})에 강제 매각됨.`);
+                }
+                finishTurn(isDouble);
+            }
+        }
+    </script>
+</body>
+</html>
