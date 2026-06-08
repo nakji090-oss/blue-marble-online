@@ -178,15 +178,21 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // 환경 변수 설정
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        // 전달받으신 실제 구글 파이어베이스 설정값 적용 완료
+        const firebaseConfig = {
+            apiKey: "AIzaSyArjDU8g5xz6P_gRwN1o3A0RglFgtRuD4A",
+            authDomain: "burumbul-online.firebaseapp.com",
+            projectId: "burumbul-online",
+            storageBucket: "burumbul-online.firebasestorage.app",
+            messagingSenderId: "704404151615",
+            appId: "1:704404151615:web:46cdd141a86fc3ad1b478a"
+        };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         // 글로벌 상태 변수
         let userId = null;
@@ -254,14 +260,10 @@
         // === 1. 파이어베이스 및 인증 초기화 ===
         const initAuth = async () => {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
             } catch(e) { 
                 console.error("Auth error", e); 
-                alert("인증 오류가 발생했습니다.");
+                alert("익명 로그인 활성화가 필요합니다. 구글 파이어베이스에서 Authentication -> Sign-in Method -> 익명(Anonymous)을 사용 설정했는지 확인해주세요.");
             }
         };
 
@@ -273,7 +275,6 @@
             }
         });
         
-        // App Load 시점 실행
         initAuth();
 
         // === 2. 로비 / 방 시스템 ===
@@ -283,12 +284,12 @@
             userName = nameInput;
 
             roomCode = Math.floor(1000 + Math.random() * 9000).toString(); // 4자리 번호
-            roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'burumabul_rooms', roomCode);
+            roomRef = doc(db, 'rooms', roomCode); // 실제 DB 환경 호환을 위해 경로 극단적 간소화
             isHost = true;
 
             const initialState = {
                 status: 'waiting',
-                players: [{ uid: userId, name: userName, color: colors[0], money: 600, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false }],
+                players: [{ uid: userId, name: userName, color: colors[0], money: 600, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, freeSpaceTravel: false }],
                 curP: 0,
                 socialFund: 0,
                 boardState: Array(40).fill({owner: null, buildings: [0,0,0]}),
@@ -308,7 +309,7 @@
 
             userName = nameInput;
             roomCode = codeInput;
-            roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'burumabul_rooms', roomCode);
+            roomRef = doc(db, 'rooms', roomCode);
 
             try {
                 const docSnap = await getDoc(roomRef);
@@ -319,13 +320,13 @@
                 if(state.players.length >= 4) return alertMsg("방이 꽉 찼습니다 (최대 4인).");
                 if(state.players.find(p => p.uid === userId)) return alertMsg("이미 접속된 기기입니다.");
 
-                const newPlayer = { uid: userId, name: userName, color: colors[state.players.length], money: 600, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false };
+                const newPlayer = { uid: userId, name: userName, color: colors[state.players.length], money: 600, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, freeSpaceTravel: false };
                 await updateDoc(roomRef, { players: [...state.players, newPlayer] });
                 listenToRoom();
             } catch(e) { console.error(e); alertMsg("접속 중 오류가 발생했습니다."); }
         };
 
-        // 방 상태 실시간 감지 (멀티플레이의 핵심)
+        // 방 상태 실시간 감지
         function listenToRoom() {
             document.getElementById('lobby-screen').style.display = 'none';
             document.getElementById('waiting-screen').style.display = 'block';
@@ -335,7 +336,6 @@
                 if(!docSnap.exists()) return;
                 const state = docSnap.data();
                 
-                // 내 인덱스 파악
                 myPlayerIdx = state.players.findIndex(p => p.uid === userId);
 
                 if(state.status === 'waiting') {
@@ -345,7 +345,10 @@
                     document.getElementById('game-screen').style.display = 'flex';
                     syncFromNetwork(state);
                 }
-            }, (err) => console.error(err));
+            }, (err) => {
+                console.error(err);
+                alertMsg("서버 통신 오류가 발생했습니다. 파이어베이스 Firestore Database의 규칙(Rules)이 '테스트 모드' 혹은 '전체 쓰기 허용' 상태인지 콘솔에서 확인해주세요.");
+            });
         }
 
         function renderWaitingRoom(pList) {
@@ -373,7 +376,7 @@
             await updateDoc(roomRef, {
                 status: 'playing',
                 players: initPlayers,
-                logs: [...state.logs, "주사위를 굴려 게임을 시작하세요!"]
+                logs: [...state.logs, "게임을 시작합니다! 첫 번째 차례부터 주사위를 굴려주세요."]
             });
         };
 
@@ -422,14 +425,11 @@
             renderLogs();
         }
 
-        // 상태를 DB에 기록하는 래퍼 함수 (모든 로컬 변경사항 저장)
         async function syncAction(actionFn) {
-            if(myPlayerIdx !== curP) return; // 내 턴이 아니면 DB 기록 차단
+            if(myPlayerIdx !== curP) return; // 내 턴이 아니면 DB 수정 차단
             
-            // 로컬 액션 수행
             await actionFn();
             
-            // DB 업데이트
             try {
                 const bState = boardData.map(c => ({owner: c.owner, buildings: c.buildings}));
                 await updateDoc(roomRef, {
@@ -438,7 +438,7 @@
                     socialFund: socialFund,
                     deck: deck,
                     boardState: bState,
-                    logs: gameLogs.slice(-15) // 최근 15개만 유지
+                    logs: gameLogs.slice(-20) // 최근 20개 로그 유지
                 });
             } catch(e) { console.error("Sync Error", e); }
         }
@@ -454,7 +454,6 @@
             l.scrollTop = l.scrollHeight;
         }
 
-        // 보드판 렌더링
         let boardInitialized = false;
         function renderBoard() {
             const boardEl = document.getElementById('board');
@@ -480,7 +479,7 @@
                 boardInitialized = true;
             }
 
-            // 동적 데이터 갱신
+            // 보드 데이터 정보 바인딩
             boardData.forEach((data, i) => {
                 const cell = document.getElementById(`cell-${i}`);
                 let titleHtml = `<div class="cell-name">${data.name}</div>`;
@@ -510,7 +509,7 @@
                 `;
             });
 
-            // 플레이어 말 배치
+            // 플레이어 말 렌더링
             players.forEach((p, idx) => {
                 if(p.isBankrupt) return;
                 const token = document.createElement('div');
@@ -539,25 +538,24 @@
             });
         }
 
-        // === 4. 게임 핵심 로직 ===
-        
+        // === 4. 주사위 & 말 이동 로직 ===
         window.handleDiceClick = () => {
             if (curP !== myPlayerIdx) return;
             document.getElementById('btn-roll-center').disabled = true;
 
             const p = players[curP];
             
-            // 무인도 체크
+            // 무인도 갇힘 처리
             if (p.islandTurns > 0) {
                 rollDiceAnimation((d1, d2) => {
                     syncAction(() => {
                         if (d1 === d2) {
-                            localLog(`더블(${d1},${d2})! 무인도 탈출!`);
+                            localLog(`더블(${d1},${d2})! 무인도 탈출에 성공했습니다!`);
                             p.islandTurns = 0;
                             movePlayer(d1 + d2, true);
                         } else {
                             p.islandTurns--;
-                            localLog(`무인도 갇힘 (${d1},${d2}). 남은 턴: ${p.islandTurns}`);
+                            localLog(`무인도 대기 중 (${d1},${d2}). 남은 대기 턴: ${p.islandTurns}`);
                             finishTurn(false);
                         }
                     });
@@ -565,18 +563,18 @@
                 return;
             }
 
-            // 우주여행 대기 체크
+            // 우주여행 탑승 처리
             if (p.inSpace) {
                 showSpaceTravelDestinations();
-                return; // syncAction is called inside the destination selector
+                return;
             }
 
-            // 일반 주사위
+            // 일반 주사위 롤링
             rollDiceAnimation((d1, d2) => {
                 const total = d1 + d2;
                 const isDouble = (d1 === d2);
                 syncAction(() => {
-                    localLog(`주사위 🎲 ${d1}, ${d2} (이동: ${total}) ${isDouble ? '[더블]' : ''}`);
+                    localLog(`주사위 🎲 ${d1}, ${d2} (총 ${total}칸 전진) ${isDouble ? '[더블!]' : ''}`);
                     movePlayer(total, isDouble);
                 });
             });
@@ -613,7 +611,7 @@
             if (newPos >= 40 || (forceMove && newPos < p.pos && newPos !== 10)) { 
                 if(newPos !== 10) { 
                     p.money += 20; 
-                    localLog(`출발선 통과! 월급 20만원 수령.`);
+                    localLog(`출발선 통과! 월급 20만 원을 지급받았습니다.`);
                 }
                 newPos = newPos % 40;
             } else if (newPos < 0) {
@@ -626,7 +624,7 @@
 
         function finishTurn(isDouble) {
             if (isDouble && players[curP].islandTurns === 0 && !players[curP].inSpace) {
-                localLog(`더블! 주사위를 한 번 더 굴립니다.`);
+                localLog(`더블 보너스! 한 번 더 굴립니다.`);
             } else {
                 let limit = 0;
                 do {
@@ -636,8 +634,401 @@
             }
         }
 
-        // 모달 헬퍼 (로컬 UI)
-        function showModal(title, contentHTML, buttonsArr) {
+        // === 5. 도시 구매 및 차액 업그레이드 규칙 ===
+        function getToll(cellIdx) {
+            const cell = boardData[cellIdx];
+            if(cell.noBuild) return cell.toll[0]; 
+            
+            // 누적이 아닌 지어진 최고 등급 건물 1개에 상응하는 통행료만 지불
+            if(cell.buildings[2]) return cell.toll[3]; // 호텔 대여료
+            if(cell.buildings[1]) return cell.toll[2]; // 빌딩 대여료
+            if(cell.buildings[0]) return cell.toll[1]; // 별장 대여료
+            return cell.toll[0]; // 맨대지 대여료
+        }
+
+        function handleCity(cell, isDouble) {
+            const p = players[curP];
+            
+            // 1. 미개척지 도착: 대지만 구매 가능 (첫 방문 시 건물 구매 원천 금지)
+            if (cell.owner === null) {
+                if (p.money >= cell.price) {
+                    showModal(`도시 구매`, `<b>${cell.name}</b> 도착!<br>대지 구매가: ${formatMoney(cell.price)}`, [
+                        { text: "구매하기", onClick: () => syncAction(() => {
+                            payAmount(cell.price, null, () => {
+                                cell.owner = curP;
+                                cell.buildings = [0,0,0];
+                                localLog(`${cell.name} 대지 구입 완료.`);
+                                finishTurn(isDouble);
+                            });
+                        })},
+                        { text: "통과", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) }
+                    ]);
+                } else {
+                    syncAction(() => finishTurn(isDouble));
+                }
+                return;
+            }
+
+            // 2. 내 소유 도시 재방문: 건물 구매 및 차액 기반 업그레이드
+            if (cell.owner === curP) {
+                if (cell.noBuild || cell.buildings[2] === 1) { syncAction(() => finishTurn(isDouble)); return; }
+                
+                // 현재 등급 파악 (0:대지, 1:별장, 2:빌딩, 3:호텔)
+                let currentLevel = 0;
+                if(cell.buildings[2]) currentLevel = 3;
+                else if(cell.buildings[1]) currentLevel = 2;
+                else if(cell.buildings[0]) currentLevel = 1;
+
+                let html = `<b>${cell.name}</b>에 재방문했습니다. 건물을 업그레이드하세요.<br>현재 잔고: ${formatMoney(p.money)}<br><br>`;
+                let opts = [];
+
+                // 차액 계산 및 옵션 제시
+                if (currentLevel < 1 && p.money >= cell.build[0]) {
+                    opts.push({ level: 1, name: '🏠 별장 올리기', cost: cell.build[0] });
+                }
+                if (currentLevel < 2) {
+                    let upgradeCost = currentLevel === 1 ? (cell.build[1] - cell.build[0]) : cell.build[1];
+                    if (p.money >= upgradeCost) {
+                        opts.push({ level: 2, name: '🏢 빌딩으로 업그레이드', cost: upgradeCost });
+                    }
+                }
+                if (currentLevel < 3) {
+                    let upgradeCost = 0;
+                    if (currentLevel === 2) upgradeCost = cell.build[2] - cell.build[1];
+                    else if (currentLevel === 1) upgradeCost = cell.build[2] - cell.build[0];
+                    else upgradeCost = cell.build[2];
+                    
+                    if (p.money >= upgradeCost) {
+                        opts.push({ level: 3, name: '🏨 호텔 최종 업그레이드', cost: upgradeCost });
+                    }
+                }
+
+                if(opts.length === 0) { syncAction(() => finishTurn(isDouble)); return; }
+
+                const btns = opts.map(o => ({
+                    text: `${o.name} (${formatMoney(o.cost)})`,
+                    onClick: () => syncAction(() => {
+                        payAmount(o.cost, null, () => {
+                            // 등급 적용
+                            cell.buildings = [0,0,0];
+                            cell.buildings[o.level - 1] = 1;
+                            localLog(`${cell.name} 건물 등급 업그레이드 성공!`);
+                            finishTurn(isDouble);
+                        });
+                    })
+                }));
+                btns.push({ text: "짓지 않기", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) });
+                showModal("건물 업그레이드", html, btns);
+                return;
+            }
+
+            // 3. 상대방 영지 진입 (통행료 징수 및 우대권 방어막 작동)
+            const toll = getToll(p.pos);
+            const ownerName = players[cell.owner].name;
+            
+            const processToll = () => syncAction(() => {
+                payAmount(toll, cell.owner, () => {
+                    localLog(`${ownerName}에게 통행료 ${formatMoney(toll)}를 지불했습니다.`);
+                    finishTurn(isDouble);
+                });
+            });
+
+            if (p.items.free_pass > 0) {
+                showModal("통행료 지불 경고", `<b>${ownerName}</b>의 영지(${cell.name})에 착륙했습니다.<br>통행료: ${formatMoney(toll)}<br><br>우대권을 사용하여 징수를 면제받겠습니까?`, [
+                    { text: "우대권 사용하기 🎫", class:"btn-secondary", onClick: () => syncAction(() => {
+                        p.items.free_pass--;
+                        localLog(`우대권을 사용해 통행료를 완전히 면제받았습니다!`);
+                        finishTurn(isDouble);
+                    })},
+                    { text: "그냥 현금 지불하기", class: "btn-danger", onClick: processToll }
+                ]);
+            } else {
+                showModal("통행료 지불", `<b>${ownerName}</b>의 영지(${cell.name})에 도착했습니다.<br>통행료: ${formatMoney(toll)}`, [
+                    { text: "지불", class: "btn-danger", onClick: processToll }
+                ]);
+            }
+        }
+
+        // === 6. 온라인 파이어베이스 연동 자산 매각 시스템 (원가 매각) ===
+        function showSellModal(debtAmount, toPlayerIdx, successCallback) {
+            const p = players[curP];
+            
+            const renderItems = () => {
+                if (p.money >= debtAmount) {
+                    document.getElementById('modal-overlay').style.display = 'none';
+                    payAmount(debtAmount, toPlayerIdx, successCallback);
+                    return;
+                }
+
+                let html = `<p style="color:#e74c3c; font-weight:bold;">채무 한도 초과! 긴급 자산 처분<br>요구 자금: ${formatMoney(debtAmount)} / 보유 잔고: ${formatMoney(p.money)}</p>`;
+                let hasAssets = false;
+
+                boardData.forEach((cell, idx) => {
+                    if (cell.owner === curP) {
+                        hasAssets = true;
+                        let bldNames = []; let bVal = 0;
+                        if(cell.buildings[0]) { bldNames.push("별장"); bVal += cell.build[0]; }
+                        if(cell.buildings[1]) { bldNames.push("빌딩"); bVal += cell.build[1]; }
+                        if(cell.buildings[2]) { bldNames.push("호텔"); bVal += cell.build[2]; }
+                        
+                        // 제값(원가 100%) 매각 기준 수령
+                        let totalVal = cell.price + bVal;
+
+                        html += `<div class="sell-item">
+                            <div><b>${cell.name}</b> 전체 철거매각<br><small>환급액: ${formatMoney(totalVal)}</small></div>
+                            <button class="btn-danger" style="padding:8px;" onclick="executeSell('full', ${idx}, ${totalVal})">매각</button>
+                        </div>`;
+                        
+                        if (bldNames.length > 0) {
+                            let topBldIdx = cell.buildings[2] ? 2 : (cell.buildings[1] ? 1 : 0);
+                            let bPrice = cell.build[topBldIdx];
+                            let bName = topBldIdx === 2 ? '호텔' : (topBldIdx === 1 ? '빌딩' : '별장');
+                            html += `<div class="sell-item" style="background:#fff3cd;">
+                                <div>└ [건물만] <b>${bName}</b> 단독 철거<br><small>환급액: ${formatMoney(bPrice)}</small></div>
+                                <button class="btn-danger" style="padding:8px;" onclick="executeSell('bld', ${idx}, ${bPrice}, ${topBldIdx})">건물매각</button>
+                            </div>`;
+                        }
+                    }
+                });
+
+                if (!hasAssets) {
+                     document.getElementById('modal-overlay').style.display = 'none';
+                     localLog(`파산 선언! 모든 자산이 매각 및 몰수 처리되었습니다.`);
+                     p.isBankrupt = true;
+                     boardData.forEach(c => { if(c.owner === curP) c.owner = (toPlayerIdx === 'fund' ? null : toPlayerIdx); });
+                     if(toPlayerIdx !== null && toPlayerIdx !== 'fund') players[toPlayerIdx].money += p.money;
+                     checkWin();
+                } else {
+                     document.getElementById('modal-body').innerHTML = html;
+                }
+            };
+
+            window.executeSell = (type, id, price, bIdx) => syncAction(async () => {
+                p.money += price;
+                if (type === 'full') {
+                    boardData[id].owner = null; boardData[id].buildings = [0,0,0];
+                } else if (type === 'bld') {
+                    boardData[id].buildings = [0,0,0];
+                    if (bIdx > 0) boardData[id].buildings[bIdx - 1] = 1; // 이전 단계 건물 복원
+                }
+                renderItems(); 
+            });
+
+            document.getElementById('modal-title').innerText = "긴급 자산 철거 및 매각";
+            document.getElementById('modal-buttons').innerHTML = ''; 
+            document.getElementById('modal-overlay').style.display = 'flex';
+            renderItems();
+        }
+
+        // === 7. 기타 칸 이벤트 및 우주여행 탑승 선택제 ===
+        function handleCellAction(isDouble) {
+            const p = players[curP];
+            const cell = boardData[p.pos];
+            
+            if (cell.type === TYPES.START) {
+                finishTurn(isDouble);
+            }
+            else if (cell.type === TYPES.ISLAND) {
+                localLog(`무인도 조난! 향후 3턴간 이동할 수 없습니다.`);
+                p.islandTurns = 3;
+                finishTurn(false);
+            }
+            else if (cell.type === TYPES.TAX || cell.type === TYPES.FUND_PAY) {
+                const tax = 15;
+                showModal("사회복지기금 납부", `사회복지기금 및 정기 세금으로 ${formatMoney(tax)}을 납부해야 합니다.`, [
+                    { text: "지불", onClick: () => syncAction(() => {
+                        payAmount(tax, 'fund', () => {
+                            localLog(`기금 납부 완료.`);
+                            finishTurn(isDouble);
+                        });
+                    })}
+                ]);
+            }
+            else if (cell.type === TYPES.FUND_RECV) {
+                if (socialFund > 0) {
+                    p.money += socialFund;
+                    localLog(`적립금 대방출! 기금 ${formatMoney(socialFund)}을 전액 획득했습니다.`);
+                    socialFund = 0;
+                }
+                finishTurn(isDouble);
+            }
+            else if (cell.type === TYPES.TRAVEL) {
+                handleSpaceTravel(isDouble);
+            }
+            else if (cell.type === TYPES.KEY) {
+                drawGoldenKey(isDouble);
+            }
+            else if (cell.type === TYPES.CITY) {
+                handleCity(cell, isDouble);
+            }
+        }
+
+        function handleSpaceTravel(isDouble) {
+            const p = players[curP];
+            const columbia = boardData[32];
+            const travelFee = 20;
+
+            if (p.freeSpaceTravel) {
+                syncAction(() => {
+                    p.freeSpaceTravel = false; p.inSpace = true;
+                    localLog(`황금열쇠 프리패스 권한으로 무료 우주선 승선 완료!`);
+                    finishTurn(false);
+                });
+                return;
+            }
+
+            if (columbia.owner === curP) {
+                syncAction(() => {
+                    p.inSpace = true;
+                    localLog(`컬럼비아호 오너 권한으로 무료 우주선 탑승 완료!`);
+                    finishTurn(false);
+                });
+            } else {
+                const ownerName = columbia.owner !== null ? players[columbia.owner].name : "은행";
+                showModal("우주여행 출발지 대기", `탑승 여정을 선택하세요.<br>이용 수수료: ${formatMoney(travelFee)}<br>요금 지불 대상: ${ownerName}`, [
+                    { text: "티켓 구입 후 탑승하기", onClick: () => syncAction(() => {
+                        payAmount(travelFee, columbia.owner, () => {
+                            p.inSpace = true;
+                            localLog(`우주선 티켓 구입 완료. 다음 턴 전 지역 순간 이동 대기.`);
+                            finishTurn(false);
+                        });
+                    })},
+                    { text: "타지 않고 지나치기", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) }
+                ]);
+            }
+        }
+
+        function showSpaceTravelDestinations() {
+            const p = players[curP];
+            let options = '';
+            boardData.forEach((cell, idx) => { if(idx !== 30) options += `<option value="${idx}">${idx}. ${cell.name}</option>`; });
+
+            showModal("🚀 목적지 텔레포트", `우주선 착륙 지점을 설정해 주세요.`, [
+                { text: "목적지로 텔레포트", onClick: () => syncAction(() => {
+                    const dest = parseInt(document.getElementById('space-dest').value);
+                    p.inSpace = false;
+                    localLog(`우주선 대기권 탈출 -> ${boardData[dest].name} 강하!`);
+                    movePlayer(dest - p.pos, false, true); // 특정 위치로 정밀 이동
+                })}
+            ], "select");
+            
+            // 모달 바디에 셀렉트 박스 강제 추가
+            document.getElementById('modal-body').innerHTML = `<p>원하는 하강 목적지를 선정하세요.</p><select id="space-dest" style="padding:10px; font-size:16px; width:100%;">${options}</select>`;
+        }
+
+        // === 8. 오리지널 황금열쇠 30장 풀 덱 시스템 ===
+        function createDeck() {
+            return [
+                { type: 'move', target: 1, desc: '항공여행: 콩코드 여객기를 타고 타이베이로 이동합니다. (수수료 및 월급 적용)' },
+                { type: 'move', target: 3, desc: '관광여행: 퀸 엘리자베스호를 타고 베이징으로 날아갑니다.' },
+                { type: 'move', target: 0, desc: '고속도로: 한 바퀴 돌아 출발지로 즉시 진입합니다.' },
+                { type: 'move', target: 39, desc: '관광여행: 수도 서울특별시로 순간이동합니다.' },
+                { type: 'move', target: 25, desc: '관광여행: 대한민국 제2의 도시 부산으로 순간이동합니다.' },
+                { type: 'move', target: 5, desc: '관광여행: 대한민국 최대 휴양지 제주도로 순간이동합니다.' },
+                { type: 'move_rel', val: -2, desc: '돌발 뒤로가기: 뒤로 2칸 후퇴하시오.' },
+                { type: 'move_rel', val: -3, desc: '돌발 뒤로가기: 뒤로 3칸 후퇴하시오.' },
+                { type: 'island', desc: '무인도 수감: 월급 없이 무인도로 강제 이송됩니다.' },
+                { type: 'move', target: 20, desc: '복지기금 배당: 사회복지기금 수령처로 이동하여 전액 확보합니다.' },
+                { type: 'move_rel', val: 40, desc: '세계일주: 전체 필드를 일주하고 제자리로 복귀하며 월급을 받습니다.' },
+                { type: 'move', target: 30, desc: '우주여행 특별 수송권: 우주선 탑승권 획득! 이용료가 면제됩니다.' },
+                { type: 'move', target: 30, desc: '우주여행 특별 수송권: 우주선 탑승권 획득! 이용료가 면제됩니다.' },
+                { type: 'money', val: 30, desc: '노벨평화상 선정: 축하금 30만 원을 지급받습니다.' },
+                { type: 'money', val: 5, desc: '노후연금 지급일: 은행으로부터 5만 원을 배당받습니다.' },
+                { type: 'money', val: 20, desc: '공식 복권 1등 당첨: 축하 당첨금 20만 원을 획득합니다.' },
+                { type: 'money_all', val: 1, desc: '생일파티 개최: 모든 플레이어들에게 1만 원씩 축하금을 수령합니다.' },
+                { type: 'money', val: 10, desc: '자동차 경주대회 우승: 트로피와 상금 10만 원을 획득합니다.' },
+                { type: 'money', val: 10, desc: '국가 장학금 대상자 선정: 상금 10만 원을 교부받습니다.' },
+                { type: 'money', val: 10, desc: '장기자랑 인기상 수령: 상금 10만 원을 교부받습니다.' },
+                { type: 'pay_build', mult: [1, 3, 5], desc: '영지 긴급 방범비 징수: 건물당 별장 1만, 빌딩 3만, 호텔 5만 원을 납부합니다.' },
+                { type: 'pay_build', mult: [3, 6, 10], desc: '영지 환경 개선 수리비: 건물당 별장 3만, 빌딩 6만, 호텔 10만 원을 납부합니다.' },
+                { type: 'pay_build', mult: [5, 10, 15], desc: '정기종합소득세 과세: 건물당 별장 5만, 빌딩 10만, 호텔 15만 원을 납부합니다.' },
+                { type: 'pay', val: 5, desc: '신호 및 과속카메라 적발: 과태료 5만 원을 기금에 공제합니다.' },
+                { type: 'pay', val: 5, desc: '개인 병원 진료비 정산: 치료비 5만 원을 기금에 공제합니다.' },
+                { type: 'pay', val: 10, desc: '해외 유학 학비 송금: 학자금 10만 원을 기금에 공제합니다.' },
+                { type: 'item', item: 'island_card', desc: '무인도 긴급 무전기 지원: 무인도 프리패스 권한 및 은행 매각(20만) 가능.' },
+                { type: 'sale_half', desc: '반액대매출 강제 발동: 소유 부동산 중 가장 최고가 부동산이 은행에 반값으로 몰수됩니다.' },
+                { type: 'sale_half', desc: '반액대매출 강제 발동: 소유 부동산 중 가장 최고가 부동산이 은행에 반값으로 몰수됩니다.' },
+                { type: 'item', item: 'free_pass', desc: '우대권 획득: 통행료 발생 시 1회 완전 방어가 가능한 증서.' },
+                { type: 'item', item: 'free_pass', desc: '우대권 획득: 통행료 발생 시 1회 완전 방어가 가능한 증서.' }
+            ].sort(() => Math.random() - 0.5);
+        }
+
+        function drawGoldenKey(isDouble) {
+            syncAction(() => {
+                if(deck.length === 0) deck = createDeck();
+                const card = deck.pop();
+                
+                showModal("🔑 황금열쇠 개봉", `<b>${card.desc}</b>`, [
+                    { text: "카드 이행하기", onClick: () => syncAction(() => executeGoldenKey(card, isDouble)) }
+                ]);
+            });
+        }
+
+        function executeGoldenKey(card, isDouble) {
+            const p = players[curP];
+            if (card.type === 'move') {
+                if (card.target === 30) p.freeSpaceTravel = true;
+                movePlayer(card.target - p.pos, false, true); 
+            }
+            else if (card.type === 'move_rel') {
+                movePlayer(card.val, false, true);
+            }
+            else if (card.type === 'island') {
+                p.pos = 10; p.islandTurns = 3; finishTurn(false);
+            }
+            else if (card.type === 'money') {
+                p.money += card.val; finishTurn(isDouble);
+            }
+            else if (card.type === 'money_all') {
+                let gain = 0;
+                players.forEach((op, idx) => {
+                    if (idx !== curP && !op.isBankrupt && op.money >= card.val) {
+                        op.money -= card.val; gain += card.val;
+                    }
+                });
+                p.money += gain;
+                finishTurn(isDouble);
+            }
+            else if (card.type === 'pay') {
+                payAmount(card.val, 'fund', () => finishTurn(isDouble));
+            }
+            else if (card.type === 'pay_build') {
+                let tax = 0;
+                boardData.forEach(c => {
+                    if (c.owner === curP && c.buildings) {
+                        tax += c.buildings[0] * card.mult[0] + c.buildings[1] * card.mult[1] + c.buildings[2] * card.mult[2];
+                    }
+                });
+                if (tax > 0) {
+                    payAmount(tax, 'fund', () => finishTurn(isDouble));
+                } else {
+                    finishTurn(isDouble);
+                }
+            }
+            else if (card.type === 'item') {
+                p.items[card.item]++; finishTurn(isDouble);
+            }
+            else if (card.type === 'sale_half') {
+                let maxVal = -1; let targetIdx = -1;
+                boardData.forEach((c, idx) => {
+                    if (c.owner === curP) {
+                        let val = c.price;
+                        if(c.buildings) val += c.build[0]*c.buildings[0] + c.build[1]*c.buildings[1] + c.build[2]*c.buildings[2];
+                        if (val > maxVal) { maxVal = val; targetIdx = idx; }
+                    }
+                });
+                if (targetIdx !== -1) {
+                    const half = Math.floor(maxVal / 2);
+                    boardData[targetIdx].owner = null; boardData[targetIdx].buildings = [0,0,0];
+                    p.money += half;
+                    localLog(`가장 고가인 ${boardData[targetIdx].name}를 반값인 ${formatMoney(half)}에 강제 경매 처리했습니다.`);
+                }
+                finishTurn(isDouble);
+            }
+        }
+
+        // === 9. 팝업 / 유틸리티 함수 ===
+        function showModal(title, contentHTML, buttonsArr, optionalType) {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-body').innerHTML = contentHTML;
             
@@ -657,331 +1048,7 @@
             document.getElementById('modal-overlay').style.display = 'flex';
         }
         function alertMsg(msg) {
-            showModal("알림", `<p>${msg}</p>`, [{ text: "확인", onClick: () => {} }]);
-        }
-
-        // 지불 래퍼
-        function payAmount(amount, toPlayerIdx, successCallback) {
-            const p = players[curP];
-            if (p.money >= amount) {
-                p.money -= amount;
-                if(toPlayerIdx !== null && toPlayerIdx !== 'fund') players[toPlayerIdx].money += amount;
-                else if (toPlayerIdx === 'fund') socialFund += amount;
-                successCallback();
-            } else {
-                showSellModal(amount, toPlayerIdx, successCallback);
-            }
-        }
-
-        function handleCellAction(isDouble) {
-            const p = players[curP];
-            const cell = boardData[p.pos];
-            
-            if (cell.type === TYPES.START) {
-                finishTurn(isDouble);
-            }
-            else if (cell.type === TYPES.ISLAND) {
-                localLog(`무인도 도착. 3턴 휴식.`);
-                p.islandTurns = 3;
-                finishTurn(false);
-            }
-            else if (cell.type === TYPES.TAX || cell.type === TYPES.FUND_PAY) {
-                const tax = 15;
-                showModal("세금 납부", `기금/국세청에 ${formatMoney(tax)}을 납부해야 합니다.`, [
-                    { text: "납부", onClick: () => syncAction(() => {
-                        payAmount(tax, 'fund', () => {
-                            localLog(`복지기금 ${formatMoney(tax)} 납부 완료.`);
-                            finishTurn(isDouble);
-                        });
-                    })}
-                ]);
-            }
-            else if (cell.type === TYPES.FUND_RECV) {
-                if (socialFund > 0) {
-                    p.money += socialFund;
-                    localLog(`모인 사회복지기금 ${formatMoney(socialFund)} 수령!`);
-                    socialFund = 0;
-                }
-                finishTurn(isDouble);
-            }
-            else if (cell.type === TYPES.TRAVEL) {
-                handleSpaceTravel(isDouble);
-            }
-            else if (cell.type === TYPES.KEY) {
-                drawGoldenKey(isDouble);
-            }
-            else if (cell.type === TYPES.CITY) {
-                handleCity(cell, isDouble);
-            }
-        }
-
-        function getToll(cellIdx) {
-            const cell = boardData[cellIdx];
-            if(cell.noBuild) return cell.toll[0]; 
-            
-            if(cell.buildings[2]) return cell.toll[3]; // 호텔
-            if(cell.buildings[1]) return cell.toll[2]; // 빌딩
-            if(cell.buildings[0]) return cell.toll[1]; // 별장
-            return cell.toll[0]; // 대지만
-        }
-
-        function handleCity(cell, isDouble) {
-            const p = players[curP];
-            
-            // 빈 땅 구매
-            if (cell.owner === null) {
-                if (p.money >= cell.price) {
-                    showModal(`도시 구매`, `<b>${cell.name}</b> 도착!<br>대지 구매가: ${formatMoney(cell.price)}`, [
-                        { text: "구매", onClick: () => syncAction(() => {
-                            payAmount(cell.price, null, () => {
-                                cell.owner = curP;
-                                localLog(`${cell.name} 구매!`);
-                                finishTurn(isDouble);
-                            });
-                        })},
-                        { text: "통과", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) }
-                    ]);
-                } else {
-                    syncAction(() => finishTurn(isDouble));
-                }
-                return;
-            }
-
-            // 내 땅 (건물)
-            if (cell.owner === curP) {
-                if (cell.noBuild || cell.buildings[2] === 1) { syncAction(() => finishTurn(isDouble)); return; }
-                
-                let html = `현재 잔고: ${formatMoney(p.money)}<br><br>`;
-                let opts = [];
-                if (!cell.buildings[0] && p.money >= cell.build[0]) opts.push({t:0, c:cell.build[0], n:'별장'});
-                if (!cell.buildings[1] && p.money >= cell.build[1]) opts.push({t:1, c:cell.build[1], n:'빌딩'});
-                if (!cell.buildings[2] && p.money >= cell.build[2]) opts.push({t:2, c:cell.build[2], n:'호텔'});
-
-                if(opts.length === 0) { syncAction(() => finishTurn(isDouble)); return; }
-
-                const btns = opts.map(o => ({
-                    text: `${o.n} (${formatMoney(o.c)})`,
-                    onClick: () => syncAction(() => {
-                        payAmount(o.c, null, () => {
-                            cell.buildings[o.t] = 1;
-                            localLog(`${cell.name}에 ${o.n} 건설!`);
-                            finishTurn(isDouble);
-                        });
-                    })
-                }));
-                btns.push({ text: "종료", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) });
-                showModal("건물 건설", html, btns);
-                return;
-            }
-
-            // 남의 땅 (통행료)
-            const toll = getToll(p.pos);
-            const ownerName = players[cell.owner].name;
-            
-            const processToll = () => syncAction(() => {
-                payAmount(toll, cell.owner, () => {
-                    localLog(`${ownerName}에게 통행료 ${formatMoney(toll)} 지불.`);
-                    finishTurn(isDouble);
-                });
-            });
-
-            if (p.items.free_pass > 0) {
-                showModal("통행료 지불", `${ownerName}의 ${cell.name} 도착!<br>통행료: ${formatMoney(toll)}<br>우대권을 사용하시겠습니까?`, [
-                    { text: "우대권 사용", class:"btn-secondary", onClick: () => syncAction(() => {
-                        p.items.free_pass--;
-                        localLog(`우대권 사용! 통행료 면제.`);
-                        finishTurn(isDouble);
-                    })},
-                    { text: "현금 지불", class: "btn-danger", onClick: processToll }
-                ]);
-            } else {
-                showModal("통행료 지불", `${ownerName}의 ${cell.name} 도착!<br>통행료: ${formatMoney(toll)}`, [
-                    { text: "지불", class: "btn-danger", onClick: processToll }
-                ]);
-            }
-        }
-
-        // 매각 및 파산 시스템 (원가 매각 반영)
-        function showSellModal(debtAmount, toPlayerIdx, successCallback) {
-            const p = players[curP];
-            
-            const renderItems = () => {
-                if (p.money >= debtAmount) {
-                    document.getElementById('modal-overlay').style.display = 'none';
-                    payAmount(debtAmount, toPlayerIdx, successCallback); // 다시 래퍼 호출
-                    return;
-                }
-
-                let html = `<p style="color:#e74c3c; font-weight:bold;">채무액: ${formatMoney(debtAmount)} / 잔고: ${formatMoney(p.money)}</p>`;
-                let hasAssets = false;
-
-                boardData.forEach((cell, idx) => {
-                    if (cell.owner === curP) {
-                        hasAssets = true;
-                        let bldNames = []; let bVal = 0;
-                        if(cell.buildings[0]) { bldNames.push("별장"); bVal += cell.build[0]; }
-                        if(cell.buildings[1]) { bldNames.push("빌딩"); bVal += cell.build[1]; }
-                        if(cell.buildings[2]) { bldNames.push("호텔"); bVal += cell.build[2]; }
-                        
-                        // 제값(원가 100%)에 매각
-                        let totalVal = cell.price + bVal;
-
-                        html += `<div class="sell-item">
-                            <div><b>${cell.name}</b> (대지+${bldNames.join(',')})<br><small>매각가: ${formatMoney(totalVal)}</small></div>
-                            <button class="btn-danger" style="padding:8px;" onclick="executeSell('full', ${idx}, ${totalVal})">매각</button>
-                        </div>`;
-                        
-                        if (bldNames.length > 0) {
-                            let topBldIdx = cell.buildings[2] ? 2 : (cell.buildings[1] ? 1 : 0);
-                            let bPrice = cell.build[topBldIdx];
-                            let bName = topBldIdx === 2 ? '호텔' : (topBldIdx === 1 ? '빌딩' : '별장');
-                            html += `<div class="sell-item" style="background:#fff3cd;">
-                                <div>└ [건물만] <b>${bName}</b> 매각<br><small>매각가: ${formatMoney(bPrice)}</small></div>
-                                <button class="btn-danger" style="padding:8px;" onclick="executeSell('bld', ${idx}, ${bPrice}, ${topBldIdx})">건물매각</button>
-                            </div>`;
-                        }
-                    }
-                });
-
-                if (!hasAssets) {
-                     document.getElementById('modal-overlay').style.display = 'none';
-                     localLog(`🚨 파산!`);
-                     p.isBankrupt = true;
-                     boardData.forEach(c => { if(c.owner === curP) c.owner = (toPlayerIdx === 'fund' ? null : toPlayerIdx); });
-                     if(toPlayerIdx !== null && toPlayerIdx !== 'fund') players[toPlayerIdx].money += p.money;
-                     checkWin();
-                } else {
-                     document.getElementById('modal-body').innerHTML = html;
-                }
-            };
-
-            window.executeSell = (type, id, price, bIdx) => syncAction(async () => {
-                p.money += price;
-                if (type === 'full') {
-                    boardData[id].owner = null; boardData[id].buildings = [0,0,0];
-                } else if (type === 'bld') {
-                    boardData[id].buildings[bIdx] = 0;
-                }
-                renderItems(); // 로컬 갱신 후 다시 판단
-            });
-
-            document.getElementById('modal-title').innerText = "자산 매각";
-            document.getElementById('modal-buttons').innerHTML = ''; 
-            document.getElementById('modal-overlay').style.display = 'flex';
-            renderItems();
-        }
-
-        function checkWin() {
-            const activePlayers = players.filter(p => !p.isBankrupt);
-            if(activePlayers.length === 1) {
-                showModal("🏆 게임 종료!", `최후의 승자는 <b>${activePlayers[0].name}</b> 입니다!`, [
-                    { text: "확인", onClick: () => {} }
-                ]);
-            } else {
-                finishTurn(false);
-            }
-        }
-
-        // 우주여행
-        function handleSpaceTravel(isDouble) {
-            const p = players[curP];
-            const columbia = boardData[32];
-            const travelFee = 20;
-
-            if (p.freeSpaceTravel) {
-                syncAction(() => {
-                    p.freeSpaceTravel = false; p.inSpace = true;
-                    localLog(`황금열쇠 특권으로 우주여행 준비 완료.`);
-                    finishTurn(false);
-                });
-                return;
-            }
-
-            if (columbia.owner === curP) {
-                syncAction(() => {
-                    p.inSpace = true;
-                    localLog(`컬럼비아호 소유자 무료 우주여행 준비!`);
-                    finishTurn(false);
-                });
-            } else {
-                const ownerName = columbia.owner !== null ? players[columbia.owner].name : "은행";
-                showModal("우주여행", `이용료 ${formatMoney(travelFee)}을 지불하고 우주여행을 대기하시겠습니까?`, [
-                    { text: "지불 후 탑승", onClick: () => syncAction(() => {
-                        payAmount(travelFee, columbia.owner, () => {
-                            p.inSpace = true;
-                            localLog(`우주여행 탑승 완료!`);
-                            finishTurn(false);
-                        });
-                    })},
-                    { text: "탑승 안함", class: "btn-secondary", onClick: () => syncAction(() => finishTurn(isDouble)) }
-                ]);
-            }
-        }
-
-        function showSpaceTravelDestinations() {
-            const p = players[curP];
-            let options = '';
-            boardData.forEach((cell, idx) => { if(idx !== 30) options += `<option value="${idx}">${idx}. ${cell.name}</option>`; });
-
-            showModal("우주여행 목적지 선택", `<select id="space-dest">${options}</select>`, [
-                { text: "이동", onClick: () => syncAction(() => {
-                    const dest = parseInt(document.getElementById('space-dest').value);
-                    p.inSpace = false;
-                    localLog(`🚀 우주여행 출발 -> ${boardData[dest].name}`);
-                    movePlayer(dest - p.pos, false, true); // 목적지로 점프
-                })}
-            ]);
-        }
-
-        // 황금열쇠 시스템
-        function createDeck() {
-            return [
-                { type: 'move', target: 0, desc: '고속도로: 출발지로 바로 이동' },
-                { type: 'move', target: 39, desc: '관광여행: 서울로 이동' },
-                { type: 'island', desc: '무인도로 가시오' },
-                { type: 'money', val: 30, desc: '노벨 평화상: 30만원 수령' },
-                { type: 'pay', val: 5, desc: '과속운전: 벌금 5만원 지불' },
-                { type: 'sale_half', desc: '반액대매출: 가장 비싼 자산 반값 강제 매각' },
-                { type: 'item', item: 'free_pass', desc: '우대권 획득! (통행료 1회 면제)' },
-                { type: 'item', item: 'free_pass', desc: '우대권 획득! (통행료 1회 면제)' }
-            ].sort(() => Math.random() - 0.5); // 섞기
-        }
-
-        function drawGoldenKey(isDouble) {
-            syncAction(() => {
-                if(deck.length === 0) deck = createDeck();
-                const card = deck.pop();
-                
-                showModal("🔑 황금열쇠", `<b>${card.desc}</b>`, [
-                    { text: "확인", onClick: () => syncAction(() => executeGoldenKey(card, isDouble)) }
-                ]);
-            });
-        }
-
-        function executeGoldenKey(card, isDouble) {
-            const p = players[curP];
-            if (card.type === 'move') { movePlayer(card.target - p.pos, false, true); }
-            else if (card.type === 'island') { p.pos = 10; p.islandTurns = 3; finishTurn(false); }
-            else if (card.type === 'money') { p.money += card.val; finishTurn(isDouble); }
-            else if (card.type === 'pay') { payAmount(card.val, 'fund', () => finishTurn(isDouble)); }
-            else if (card.type === 'item') { p.items[card.item]++; finishTurn(isDouble); }
-            else if (card.type === 'sale_half') {
-                let maxVal = -1; let targetIdx = -1;
-                boardData.forEach((c, idx) => {
-                    if (c.owner === curP) {
-                        let val = c.price;
-                        if(c.buildings) val += c.build[0]*c.buildings[0] + c.build[1]*c.buildings[1] + c.build[2]*c.buildings[2];
-                        if (val > maxVal) { maxVal = val; targetIdx = idx; }
-                    }
-                });
-                if (targetIdx !== -1) {
-                    const half = Math.floor(maxVal / 2);
-                    boardData[targetIdx].owner = null; boardData[targetIdx].buildings = [0,0,0];
-                    p.money += half;
-                    localLog(`가장 비싼 ${boardData[targetIdx].name}가 반값(${formatMoney(half)})에 강제 매각됨.`);
-                }
-                finishTurn(isDouble);
-            }
+            showModal("부루마불 경고", `<p>${msg}</p>`, [{ text: "확인", onClick: () => {} }]);
         }
     </script>
 </body>
