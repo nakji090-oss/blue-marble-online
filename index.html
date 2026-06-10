@@ -122,17 +122,28 @@
             justify-content: space-between; 
             text-align: center;
             font-size: min(1.6vw, 10px); 
-            padding: 3px 2px; 
+            padding: 0; /* 가격 영역이 가로 꽉 차게 패딩 해제 */
             position: relative; 
             overflow: hidden;
-            border: 1px solid #e2e8f0;
+            border: 2px solid #e2e8f0;
             color: var(--text-dark);
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, border-color 0.2s;
         }
         @media (min-width: 800px) { .cell { font-size: 10px; } }
 
-        .cell-name { font-weight: 800; font-size: 1.1em; line-height: 1.1; word-break: keep-all; z-index: 2; margin-top: 1px; }
-        .cell-price { font-size: 0.9em; font-weight: 700; color: #475569; z-index: 2; margin-bottom: 1px; }
+        .cell-name { font-weight: 800; font-size: 1.05em; line-height: 1.1; word-break: keep-all; z-index: 2; margin-top: 5px; padding: 0 2px; }
+        .cell-price { 
+            font-size: min(1.5vw, 9.5px); 
+            font-weight: 850; 
+            color: #475569; 
+            z-index: 2; 
+            width: 100%;
+            padding: 4px 2px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            margin-top: auto; /* 가격 영역을 아래쪽으로 강제 정렬 */
+        }
         
         .corner { background-color: #fef08a; }
         .gold-key { background-color: #ffedd5; color: #c2410c; }
@@ -169,10 +180,10 @@
         .landmark-art {
             position: absolute;
             width: 70%;
-            height: 50%;
-            bottom: 22%;
+            height: 45%;
+            bottom: 25%;
             left: 15%;
-            opacity: 0.18;
+            opacity: 0.22;
             z-index: 1;
             display: flex;
             align-items: center;
@@ -182,7 +193,7 @@
         .landmark-art svg { width: 100%; height: 100%; }
 
         /* 플레이어 토큰 배치 */
-        .players-wrap { position: absolute; bottom: 3px; left: 0; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; z-index: 4; }
+        .players-wrap { position: absolute; bottom: 25px; left: 0; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; z-index: 4; }
         .player-token { width: min(2.8vw, 15px); height: min(2.8vw, 15px); border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: all 0.3s ease; }
         
         /* 🏠 입체 건물 전용 영역 및 고유 스타일 */
@@ -331,26 +342,37 @@
         const formatMoney = (m) => new Intl.NumberFormat('ko-KR').format(m * 10000) + '원';
         const TYPES = { START: 0, CITY: 1, KEY: 2, ISLAND: 3, TRAVEL: 4, FUND_RECV: 5, FUND_PAY: 6, TAX: 7 };
 
-        // 랜드마크 정밀 벡터 일러스트레이션 모음 (SVG)
+        // 랜드마크 정밀 벡터 일러스트레이션 모음 (SVG) - 겹침 없는 100% 고유 랜드마크
         const landmarkSVGs = {
-            pyramids: `<svg viewBox="0 0 100 100"><polygon points="50,15 10,85 90,85" fill="#f59e0b" opacity="0.6"/><polygon points="50,15 90,85 55,85" fill="#d97706" opacity="0.8"/></svg>`,
-            eiffel: `<svg viewBox="0 0 100 100"><path d="M42,90 L48,50 L48,20 L52,20 L52,50 L58,90 L53,90 L50,65 L47,90 Z" fill="#64748b" opacity="0.9"/><rect x="44" y="45" width="12" height="4" fill="#475569"/></svg>`,
-            bigben: `<svg viewBox="0 0 100 100"><rect x="42" y="15" width="16" height="75" fill="#e2e8f0" stroke="#475569" stroke-width="1.5"/><polygon points="38,25 50,2 62,25" fill="#1e293b"/><circle cx="50" cy="35" r="4" fill="#fbbf24"/></svg>`,
-            colosseum: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="65" rx="42" ry="20" fill="#cbd5e1" stroke="#475569" stroke-width="1.5"/><rect x="18" y="40" width="64" height="25" fill="#e2e8f0"/><rect x="25" y="45" width="8" height="15" rx="3" fill="#1e293b"/><rect x="46" y="45" width="8" height="15" rx="3" fill="#1e293b"/><rect x="67" y="45" width="8" height="15" rx="3" fill="#1e293b"/></svg>`,
-            sydney: `<svg viewBox="0 0 100 100"><path d="M12,80 Q32,40 52,80 Q52,30 72,80 Q72,45 88,80 Z" fill="#f1f5f9" stroke="#94a3b8"/><line x1="5" y1="80" x2="95" y2="80" stroke="#1e293b" stroke-width="4"/></svg>`,
-            liberty: `<svg viewBox="0 0 100 100"><rect x="44" y="65" width="12" height="25" fill="#94a3b8"/><path d="M47,20 L53,20 L55,65 L45,65 Z" fill="#2dd4bf"/><circle cx="50" cy="16" r="3" fill="#2dd4bf"/><path d="M53,16 L61,6" stroke="#fbbf24" stroke-width="2.5"/></svg>`,
-            seoul: `<svg viewBox="0 0 100 100"><rect x="48" y="10" width="4" height="80" fill="#64748b"/><ellipse cx="50" cy="32" rx="14" ry="7" fill="#334155"/><ellipse cx="50" cy="32" rx="10" ry="5" fill="#ef4444"/><polygon points="40,90 50,65 60,90" fill="#475569"/></svg>`,
-            taipei: `<svg viewBox="0 0 100 100"><rect x="43" y="70" width="14" height="20" fill="#0284c7"/><rect x="41" y="55" width="18" height="15" fill="#0369a1"/><rect x="43" y="40" width="14" height="15" fill="#075985"/><rect x="45" y="25" width="10" height="15" fill="#0c4a6e"/><line x1="50" y1="25" x2="50" y2="5" stroke="#38bdf8" stroke-width="2"/></svg>`,
-            singapore: `<svg viewBox="0 0 100 100"><rect x="20" y="35" width="14" height="50" fill="#475569"/><rect x="43" y="35" width="14" height="50" fill="#475569"/><rect x="66" y="35" width="14" height="50" fill="#475569"/><path d="M15,35 L85,35 Q85,20 50,35 Z" fill="#94a3b8"/><line x1="10" y1="85" x2="90" y2="85" stroke="#1e293b" stroke-width="3"/></svg>`,
-            mermaid: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="75" rx="30" ry="12" fill="#475569"/><path d="M45,45 Q50,30 55,45 Q65,55 55,65 Q45,75 50,55 Z" fill="#2dd4bf" opacity="0.9"/></svg>`,
-            pagoda: `<svg viewBox="0 0 100 100"><polygon points="30,85 70,85 60,55 40,55" fill="#b91c1c"/><polygon points="35,55 65,55 55,30 45,30" fill="#991b1b"/><polygon points="40,30 60,30 50,10" fill="#7f1d1d"/></svg>`,
-            windmill: `<svg viewBox="0 0 100 100"><polygon points="35,85 65,85 55,40 45,40" fill="#d97706"/><line x1="50" y1="45" x2="25" y2="25" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="45" x2="75" y2="65" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="45" x2="25" y2="65" stroke="#1e293b" stroke-width="2.5"/><line x1="50" y1="45" x2="75" y2="25" stroke="#1e293b" stroke-width="2.5"/></svg>`,
-            obelisk: `<svg viewBox="0 0 100 100"><polygon points="45,90 55,90 52,20 48,20" fill="#cbd5e1" stroke="#475569"/><polygon points="48,20 52,20 50,8" fill="#94a3b8"/></svg>`,
-            parthenon: `<svg viewBox="0 0 100 100"><polygon points="15,35 85,35 50,15" fill="#e2e8f0"/><line x1="22" y1="35" x2="22" y2="85" stroke="#cbd5e1" stroke-width="5"/><line x1="40" y1="35" x2="40" y2="85" stroke="#cbd5e1" stroke-width="5"/><line x1="60" y1="35" x2="60" y2="85" stroke="#cbd5e1" stroke-width="5"/><line x1="78" y1="35" x2="78" y2="85" stroke="#cbd5e1" stroke-width="5"/><rect x="15" y="85" width="70" height="8" fill="#e2e8f0"/></svg>`,
-            bridge: `<svg viewBox="0 0 100 100"><rect x="25" y="30" width="8" height="55" fill="#64748b"/><rect x="67" y="30" width="8" height="55" fill="#64748b"/><path d="M10,65 Q50,45 90,65" stroke="#ef4444" stroke-width="4" fill="none"/></svg>`,
-            concorde: `<svg viewBox="0 0 100 100"><path d="M10,65 L50,55 L90,65 L55,45 L50,15 L45,45 Z" fill="#94a3b8"/></svg>`,
-            ship: `<svg viewBox="0 0 100 100"><path d="M15,65 L85,65 L75,85 L25,85 Z" fill="#1e293b"/><rect x="35" y="45" width="30" height="20" fill="#64748b"/><circle cx="45" cy="55" r="3" fill="#fff"/><circle cx="55" cy="55" r="3" fill="#fff"/></svg>`,
-            shuttle: `<svg viewBox="0 0 100 100"><polygon points="50,10 35,65 65,65" fill="#e2e8f0"/><rect x="42" y="65" width="16" height="15" fill="#f97316"/><polygon points="35,65 25,85 40,75" fill="#64748b"/><polygon points="65,65 75,85 60,75" fill="#64748b"/></svg>`
+            taipei: `<svg viewBox="0 0 100 100"><rect x="44" y="75" width="12" height="15" fill="#0284c7" opacity="0.8" /><polygon points="40,75 60,75 56,63 44,63" fill="#0369a1" /><polygon points="41,63 59,63 55,51 45,51" fill="#075985" /><polygon points="42,51 58,51 54,39 46,39" fill="#0c4a6e" /><polygon points="43,39 57,39 53,27 47,27" fill="#0f172a" /><line x1="50" y1="27" x2="50" y2="8" stroke="#38bdf8" stroke-width="3" /></svg>`,
+            beijing: `<svg viewBox="0 0 100 100"><rect x="25" y="70" width="50" height="15" fill="#ef4444" /><polygon points="20,70 80,70 70,55 30,55" fill="#f59e0b" /><rect x="35" y="55" width="30" height="15" fill="#ef4444" /><polygon points="28,55 72,55 64,38 36,38" fill="#f59e0b" /><rect x="42" y="38" width="16" height="15" fill="#ef4444" /><polygon points="36,38 64,38 50,18" fill="#f59e0b" /></svg>`,
+            manila: `<svg viewBox="0 0 100 100"><rect x="15" y="50" width="70" height="35" fill="#475569" /><rect x="20" y="40" width="15" height="10" fill="#334155" /><rect x="65" y="40" width="15" height="10" fill="#334155" /><path d="M40,85 A10,10 0 0,1 60,85 Z" fill="#1e293b" /><rect x="42" y="30" width="16" height="20" fill="#64748b" /><polygon points="40,30 60,30 50,15" fill="#b91c1c" /></svg>`,
+            jeju: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="35" rx="16" ry="14" fill="#475569" /><ellipse cx="50" cy="65" rx="20" ry="22" fill="#475569" /><path d="M30,28 Q50,12 70,28 Z" fill="#1e293b" /><circle cx="44" cy="34" r="3.5" fill="#e2e8f0" stroke="#1e293b" /><circle cx="56" cy="34" r="3.5" fill="#e2e8f0" stroke="#1e293b" /><circle cx="44" cy="34" r="1.5" fill="#000" /><circle cx="56" cy="34" r="1.5" fill="#000" /><ellipse cx="50" cy="40" rx="4" ry="6" fill="#334155" /><path d="M32,60 Q50,75 68,60" fill="none" stroke="#1e293b" stroke-width="4" stroke-linecap="round" /></svg>`,
+            singapore: `<svg viewBox="0 0 100 100"><path d="M45,25 C45,15 65,15 65,30 C65,40 55,45 55,55 C55,65 65,70 60,85 C50,85 40,80 40,65 C40,55 45,50 45,25 Z" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><path d="M45,25 L35,28 L40,35 Z" fill="#94a3b8" /><path d="M40,30 Q15,40 10,75" fill="none" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" /></svg>`,
+            cairo: `<svg viewBox="0 0 100 100"><polygon points="45,20 5,85 85,85" fill="#f59e0b" opacity="0.6" /><polygon points="45,20 85,85 52,85" fill="#d97706" opacity="0.8" /><polygon points="75,45 45,85 95,85" fill="#fbbf24" opacity="0.7" /><polygon points="75,45 95,85 80,85" fill="#f59e0b" opacity="0.9" /></svg>`,
+            istanbul: `<svg viewBox="0 0 100 100"><path d="M30,65 A20,20 0 0,1 70,65 Z" fill="#f59e0b" opacity="0.8" /><rect x="25" y="65" width="50" height="20" fill="#cbd5e1" stroke="#475569" /><line x1="20" y1="20" x2="20" y2="85" stroke="#475569" stroke-width="3" /><polygon points="17,20 23,20 20,10" fill="#b91c1c" /><line x1="80" y1="20" x2="80" y2="85" stroke="#475569" stroke-width="3" /><polygon points="77,20 83,20 80,10" fill="#b91c1c" /></svg>`,
+            athens: `<svg viewBox="0 0 100 100"><polygon points="15,35 85,35 50,15" fill="#e2e8f0" stroke="#475569" stroke-width="1" /><line x1="22" y1="35" x2="22" y2="80" stroke="#cbd5e1" stroke-width="5" /><line x1="36" y1="35" x2="36" y2="80" stroke="#cbd5e1" stroke-width="5" /><line x1="50" y1="35" x2="50" y2="80" stroke="#cbd5e1" stroke-width="5" /><line x1="64" y1="35" x2="64" y2="80" stroke="#cbd5e1" stroke-width="5" /><line x1="78" y1="35" x2="78" y2="80" stroke="#cbd5e1" stroke-width="5" /><rect x="12" y="80" width="76" height="10" fill="#94a3b8" /></svg>`,
+            copenhagen: `<svg viewBox="0 0 100 100"><path d="M15,85 Q50,60 85,85 Z" fill="#475569" /><path d="M42,50 Q48,25 54,42 Q62,50 56,65 Q45,72 45,55 Z" fill="#94a3b8" stroke="#334155" stroke-width="1.5" /><path d="M54,62 Q68,68 74,58 Q66,74 54,66" fill="#2dd4bf" stroke="#0f766e" /></svg>`,
+            stockholm: `<svg viewBox="0 0 100 100"><path d="M15,75 L85,75 L80,45 L62,60 L50,30 L38,60 L20,45 Z" fill="#fbbf24" stroke="#d97706" stroke-width="2" /><rect x="15" y="75" width="70" height="8" fill="#d97706" /><circle cx="50" cy="27" r="4" fill="#ef4444" /><circle cx="20" cy="42" r="3" fill="#3b82f6" /><circle cx="80" cy="42" r="3" fill="#3b82f6" /></svg>`,
+            concorde: `<svg viewBox="0 0 100 100"><path d="M10,65 L50,55 L90,65 L55,45 L50,15 L45,45 Z" fill="#94a3b8" /></svg>`,
+            bern: `<svg viewBox="0 0 100 100"><rect x="35" y="25" width="30" height="65" fill="#e2e8f0" stroke="#475569" stroke-width="1.5" /><polygon points="30,25 70,25 50,2" fill="#b91c1c" /><circle cx="50" cy="42" r="10" fill="#fbbf24" stroke="#d97706" stroke-width="1" /><line x1="50" y1="42" x2="50" y2="36" stroke="#000" stroke-width="2" /><line x1="50" y1="42" x2="55" y2="45" stroke="#000" stroke-width="2" /><circle cx="50" cy="65" r="5" fill="#000" /><circle cx="46" cy="61" r="2" fill="#000" /><circle cx="54" cy="61" r="2" fill="#000" /></svg>`,
+            berlin: `<svg viewBox="0 0 100 100"><rect x="25" y="45" width="6" height="40" fill="#cbd5e1" stroke="#475569" /><rect x="37" y="45" width="6" height="40" fill="#cbd5e1" stroke="#475569" /><rect x="49" y="45" width="6" height="40" fill="#cbd5e1" stroke="#475569" /><rect x="61" y="45" width="6" height="40" fill="#cbd5e1" stroke="#475569" /><rect x="73" y="45" width="6" height="40" fill="#cbd5e1" stroke="#475569" /><rect x="20" y="35" width="64" height="10" fill="#94a3b8" stroke="#475569" /><rect x="46" y="23" width="12" height="12" fill="#475569" /><line x1="42" y1="28" x2="50" y2="20" stroke="#334155" stroke-width="2" /><line x1="62" y1="28" x2="50" y2="20" stroke="#334155" stroke-width="2" /></svg>`,
+            ottawa: `<svg viewBox="0 0 100 100"><rect x="20" y="60" width="60" height="25" fill="#475569" /><rect x="44" y="25" width="12" height="35" fill="#334155" /><polygon points="41,25 59,25 50,5" fill="#b91c1c" /><path d="M50,75 L46,65 L50,68 L54,65 Z" fill="#ef4444" /></svg>`,
+            buenos_aires: `<svg viewBox="0 0 100 100"><polygon points="44,85 56,85 52,15 48,15" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><polygon points="48,15 52,15 50,5" fill="#94a3b8" /><polygon points="50,85 56,85 52,15 50,15" fill="#94a3b8" opacity="0.4" /></svg>`,
+            sao_paulo: `<svg viewBox="0 0 100 100"><line x1="30" y1="85" x2="70" y2="25" stroke="#ef4444" stroke-width="5" /><line x1="70" y1="85" x2="30" y2="25" stroke="#ef4444" stroke-width="5" /><line x1="50" y1="55" x2="20" y2="70" stroke="#fbbf24" stroke-width="1" /><line x1="50" y1="55" x2="80" y2="70" stroke="#fbbf24" stroke-width="1" /><line x1="50" y1="55" x2="25" y2="60" stroke="#fbbf24" stroke-width="1" /><line x1="50" y1="55" x2="75" y2="60" stroke="#fbbf24" stroke-width="1" /><path d="M10,70 Q50,55 90,70" fill="none" stroke="#475569" stroke-width="4" /></svg>`,
+            sydney: `<svg viewBox="0 0 100 100"><path d="M15,80 Q35,35 55,80" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" /><path d="M35,80 Q55,42 75,80" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5" /><path d="M55,80 Q72,50 88,80" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5" /><line x1="5" y1="80" x2="95" y2="80" stroke="#334155" stroke-width="4" /></svg>`,
+            busan: `<svg viewBox="0 0 100 100"><rect x="25" y="35" width="6" height="50" fill="#475569" /><rect x="69" y="35" width="6" height="50" fill="#475569" /><line x1="5" y1="68" x2="95" y2="68" stroke="#3b82f6" stroke-width="4.5" /><path d="M5,45 Q28,68 50,68 Q72,68 95,45" fill="none" stroke="#93c5fd" stroke-width="2" /><path d="M42,22 Q47,15 50,22 Q53,15 58,22" fill="none" stroke="#1e293b" stroke-width="1.5" /></svg>`,
+            hawaii: `<svg viewBox="0 0 100 100"><path d="M50,85 Q40,55 50,25" fill="none" stroke="#78350f" stroke-width="4" /><path d="M50,25 Q30,15 22,35" fill="none" stroke="#22c55e" stroke-width="3" /><path d="M50,25 Q45,5 50,5" fill="none" stroke="#22c55e" stroke-width="3" /><path d="M50,25 Q70,15 78,35" fill="none" stroke="#22c55e" stroke-width="3" /><circle cx="47" cy="27" r="3.5" fill="#451a03" /><circle cx="53" cy="27" r="3.5" fill="#451a03" /></svg>`,
+            lisbon: `<svg viewBox="0 0 100 100"><rect x="30" y="45" width="40" height="40" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><rect x="26" y="35" width="12" height="10" fill="#94a3b8" /><rect x="62" y="35" width="12" height="10" fill="#94a3b8" /><circle cx="32" cy="30" r="5" fill="#b91c1c" /><circle cx="68" cy="30" r="5" fill="#b91c1c" /></svg>`,
+            ship: `<svg viewBox="0 0 100 100"><path d="M15,65 L85,65 L75,85 L25,85 Z" fill="#1e293b" /><rect x="35" y="45" width="30" height="20" fill="#64748b" /><circle cx="45" cy="55" r="3" fill="#fff" /><circle cx="55" cy="55" r="3" fill="#fff" /></svg>`,
+            madrid: `<svg viewBox="0 0 100 100"><rect x="15" y="45" width="70" height="40" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><path d="M22,85 A7,7 0 0,1 36,85 Z" fill="#1e293b" /><path d="M43,85 A9,9 0 0,1 57,85 Z" fill="#1e293b" /><path d="M64,85 A7,7 0 0,1 78,85 Z" fill="#1e293b" /><polygon points="12,45 88,45 50,30" fill="#94a3b8" /></svg>`,
+            tokyo: `<svg viewBox="0 0 100 100"><polygon points="10,85 50,45 90,85" fill="#93c5fd" opacity="0.4" /><polygon points="40,55 50,45 60,55" fill="#f8fafc" /><polygon points="44,85 56,85 51,15 49,15" fill="#ef4444" stroke="#b91c1c" stroke-width="1.5" /><line x1="45" y1="65" x2="55" y2="65" stroke="#ef4444" stroke-width="2" /><line x1="47" y1="45" x2="53" y2="45" stroke="#ef4444" stroke-width="2" /></svg>`,
+            shuttle: `<svg viewBox="0 0 100 100"><polygon points="50,10 35,65 65,65" fill="#e2e8f0" /><rect x="42" y="65" width="16" height="15" fill="#f97316" /><polygon points="35,65 25,85 40,75" fill="#64748b" /><polygon points="65,65 75,85 60,75" fill="#64748b" /></svg>`,
+            paris: `<svg viewBox="0 0 100 100"><path d="M42,90 L48,50 L48,20 L52,20 L52,50 L58,90 L53,90 L50,65 L47,90 Z" fill="#64748b" opacity="0.9" stroke="#334155" stroke-width="1" /><rect x="44" y="45" width="12" height="4" fill="#475569" /><rect x="46" y="25" width="8" height="3" fill="#475569" /><line x1="50" y1="20" x2="50" y2="5" stroke="#38bdf8" stroke-width="2" /></svg>`,
+            rome: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="65" rx="42" ry="20" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><rect x="18" y="40" width="64" height="25" fill="#e2e8f0" stroke="#475569" /><rect x="25" y="45" width="8" height="15" rx="3" fill="#1e293b" /><rect x="46" y="45" width="8" height="15" rx="3" fill="#1e293b" /><rect x="67" y="45" width="8" height="15" rx="3" fill="#1e293b" /></svg>`,
+            london: `<svg viewBox="0 0 100 100"><rect x="42" y="20" width="16" height="70" fill="#e2e8f0" stroke="#475569" stroke-width="1.5" /><polygon points="38,28 50,2 62,28" fill="#1e293b" /><circle cx="50" cy="38" r="4.5" fill="#fbbf24" stroke="#d97706" /></svg>`,
+            newyork: `<svg viewBox="0 0 100 100"><rect x="44" y="65" width="12" height="25" fill="#94a3b8" stroke="#475569" /><path d="M46,20 L54,20 L56,65 L44,65 Z" fill="#2dd4bf" /><circle cx="50" cy="17" r="3.5" fill="#2dd4bf" /><path d="M53,16 L62,5" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" /><polygon points="47,15 42,12 47,17" fill="#14b8a6" /><polygon points="53,15 58,12 53,17" fill="#14b8a6" /></svg>`,
+            seoul: `<svg viewBox="0 0 100 100"><rect x="15" y="60" width="70" height="25" fill="#64748b" stroke="#334155" /><path d="M40,85 A10,10 0 0,1 60,85 Z" fill="#111827" /><polygon points="10,60 90,60 80,48 20,48" fill="#1e293b" /><rect x="25" y="48" width="50" height="12" fill="#b91c1c" /><polygon points="5,48 95,48 83,33 17,33" fill="#1e293b" /></svg>`
         };
 
         // 입체 건물 SVG 빌더 (3D 이소메트릭 느낌 구현)
@@ -390,41 +412,41 @@
             { name: "출발", type: TYPES.START },
             { name: "타이베이", type: TYPES.CITY, color: 'red', price: 5, build: [5, 15, 25], toll: [0.2, 1, 9, 25], art: 'taipei' },
             { name: "황금열쇠", type: TYPES.KEY },
-            { name: "베이징", type: TYPES.CITY, color: 'red', price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45], art: 'pagoda' },
-            { name: "마닐라", type: TYPES.CITY, color: 'red', price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45], art: 'pyramids' },
-            { name: "제주도", type: TYPES.CITY, color: 'black', price: 20, toll: [30], noBuild: true, art: 'mermaid' },
+            { name: "베이징", type: TYPES.CITY, color: 'red', price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45], art: 'beijing' },
+            { name: "마닐라", type: TYPES.CITY, color: 'red', price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45], art: 'manila' },
+            { name: "제주도", type: TYPES.CITY, color: 'black', price: 20, toll: [30], noBuild: true, art: 'jeju' },
             { name: "싱가폴", type: TYPES.CITY, color: 'red', price: 10, build: [5, 15, 25], toll: [0.6, 3, 27, 55], art: 'singapore' },
             { name: "황금열쇠", type: TYPES.KEY },
-            { name: "카이로", type: TYPES.CITY, color: 'red', price: 10, build: [5, 15, 25], toll: [0.6, 3, 27, 55], art: 'pyramids' },
-            { name: "이스탄불", type: TYPES.CITY, color: 'red', price: 12, build: [5, 15, 25], toll: [0.8, 4, 30, 60], art: 'pyramids' },
+            { name: "카이로", type: TYPES.CITY, color: 'red', price: 10, build: [5, 15, 25], toll: [0.6, 3, 27, 55], art: 'cairo' },
+            { name: "이스탄불", type: TYPES.CITY, color: 'red', price: 12, build: [5, 15, 25], toll: [0.8, 4, 30, 60], art: 'istanbul' },
             { name: "무인도", type: TYPES.ISLAND },
-            { name: "아테네", type: TYPES.CITY, color: 'yellow', price: 14, build: [10, 30, 50], toll: [1, 5, 45, 75], art: 'parthenon' },
+            { name: "아테네", type: TYPES.CITY, color: 'yellow', price: 14, build: [10, 30, 50], toll: [1, 5, 45, 75], art: 'athens' },
             { name: "황금열쇠", type: TYPES.KEY },
-            { name: "코펜하겐", type: TYPES.CITY, color: 'yellow', price: 16, build: [10, 30, 50], toll: [1.2, 6, 50, 90], art: 'windmill' },
-            { name: "스톡홀름", type: TYPES.CITY, color: 'yellow', price: 16, build: [10, 30, 50], toll: [1.2, 6, 50, 90], art: 'windmill' },
+            { name: "코펜하겐", type: TYPES.CITY, color: 'yellow', price: 16, build: [10, 30, 50], toll: [1.2, 6, 50, 90], art: 'copenhagen' },
+            { name: "스톡홀름", type: TYPES.CITY, color: 'yellow', price: 16, build: [10, 30, 50], toll: [1.2, 6, 50, 90], art: 'stockholm' },
             { name: "콩코드 여객기", type: TYPES.CITY, color: 'vehicle', price: 20, toll: [30], noBuild: true, art: 'concorde' },
-            { name: "베른", type: TYPES.CITY, color: 'yellow', price: 18, build: [10, 30, 50], toll: [1.4, 7, 50, 95], art: 'bigben' },
+            { name: "베른", type: TYPES.CITY, color: 'yellow', price: 18, build: [10, 30, 50], toll: [1.4, 7, 50, 95], art: 'bern' },
             { name: "황금열쇠", type: TYPES.KEY },
-            { name: "베를린", type: TYPES.CITY, color: 'yellow', price: 18, build: [10, 30, 50], toll: [1.4, 7, 50, 95], art: 'bigben' },
-            { name: "오타와", type: TYPES.CITY, color: 'yellow', price: 20, build: [10, 30, 50], toll: [1.6, 8, 55, 100], art: 'obelisk' },
+            { name: "베를린", type: TYPES.CITY, color: 'yellow', price: 18, build: [10, 30, 50], toll: [1.4, 7, 50, 95], art: 'berlin' },
+            { name: "오타와", type: TYPES.CITY, color: 'yellow', price: 20, build: [10, 30, 50], toll: [1.6, 8, 55, 100], art: 'ottawa' },
             { name: "사회복지기금", type: TYPES.FUND_RECV },
-            { name: "부에노스<br>아이레스", type: TYPES.CITY, color: 'green', price: 22, build: [15, 45, 75], toll: [1.8, 9, 70, 105], art: 'obelisk' },
+            { name: "부에노스<br>아이레스", type: TYPES.CITY, color: 'green', price: 22, build: [15, 45, 75], toll: [1.8, 9, 70, 105], art: 'buenos_aires' },
             { name: "황금열쇠", type: TYPES.KEY },
-            { name: "상파울루", type: TYPES.CITY, color: 'green', price: 24, build: [15, 45, 75], toll: [2, 10, 75, 110], art: 'bridge' },
+            { name: "상파울루", type: TYPES.CITY, color: 'green', price: 24, build: [15, 45, 75], toll: [2, 10, 75, 110], art: 'sao_paulo' },
             { name: "시드니", type: TYPES.CITY, color: 'green', price: 24, build: [15, 45, 75], toll: [2, 10, 75, 110], art: 'sydney' },
-            { name: "부산", type: TYPES.CITY, color: 'black', price: 50, toll: [60], noBuild: true, art: 'bridge' },
-            { name: "하와이", type: TYPES.CITY, color: 'green', price: 26, build: [15, 45, 75], toll: [2.2, 11, 80, 115], art: 'windmill' },
-            { name: "리스본", type: TYPES.CITY, color: 'green', price: 26, build: [15, 45, 75], toll: [2.2, 11, 80, 115], art: 'windmill' },
+            { name: "부산", type: TYPES.CITY, color: 'black', price: 50, toll: [60], noBuild: true, art: 'busan' },
+            { name: "하와이", type: TYPES.CITY, color: 'green', price: 26, build: [15, 45, 75], toll: [2.2, 11, 80, 115], art: 'hawaii' },
+            { name: "리스본", type: TYPES.CITY, color: 'green', price: 26, build: [15, 45, 75], toll: [2.2, 11, 80, 115], art: 'lisbon' },
             { name: "퀸엘리자베스호", type: TYPES.CITY, color: 'vehicle', price: 30, toll: [25], noBuild: true, art: 'ship' },
-            { name: "마드리드", type: TYPES.CITY, color: 'green', price: 28, build: [15, 45, 75], toll: [2.4, 12, 85, 120], art: 'parthenon' },
+            { name: "마드리드", type: TYPES.CITY, color: 'green', price: 28, build: [15, 45, 75], toll: [2.4, 12, 85, 120], art: 'madrid' },
             { name: "우주여행", type: TYPES.TRAVEL },
-            { name: "도쿄", type: TYPES.CITY, color: 'blue', price: 30, build: [20, 60, 100], toll: [2.6, 13, 90, 127], art: 'taipei' },
+            { name: "도쿄", type: TYPES.CITY, color: 'blue', price: 30, build: [20, 60, 100], toll: [2.6, 13, 90, 127], art: 'tokyo' },
             { name: "컬럼비아호", type: TYPES.CITY, color: 'vehicle', price: 45, toll: [40], noBuild: true, art: 'shuttle' },
-            { name: "파리", type: TYPES.CITY, color: 'blue', price: 32, build: [20, 60, 100], toll: [2.8, 15, 100, 140], art: 'eiffel' },
-            { name: "로마", type: TYPES.CITY, color: 'blue', price: 32, build: [20, 60, 100], toll: [2.8, 15, 100, 140], art: 'colosseum' },
+            { name: "파리", type: TYPES.CITY, color: 'blue', price: 32, build: [20, 60, 100], toll: [2.8, 15, 100, 140], art: 'paris' },
+            { name: "로마", type: TYPES.CITY, color: 'blue', price: 32, build: [20, 60, 100], toll: [2.8, 15, 100, 140], art: 'rome' },
             { name: "황금열쇠", type: TYPES.KEY },
-            { name: "런던", type: TYPES.CITY, color: 'blue', price: 35, build: [20, 60, 100], toll: [3.5, 17, 110, 150], art: 'bigben' },
-            { name: "뉴욕", type: TYPES.CITY, color: 'blue', price: 35, build: [20, 60, 100], toll: [3.5, 17, 110, 150], art: 'liberty' },
+            { name: "런던", type: TYPES.CITY, color: 'blue', price: 35, build: [20, 60, 100], toll: [3.5, 17, 110, 150], art: 'london' },
+            { name: "뉴욕", type: TYPES.CITY, color: 'blue', price: 35, build: [20, 60, 100], toll: [3.5, 17, 110, 150], art: 'newyork' },
             { name: "국세청", type: TYPES.TAX },
             { name: "서울", type: TYPES.CITY, color: 'black', price: 100, toll: [200], noBuild: true, art: 'seoul' }
         ];
@@ -577,14 +599,15 @@
                 const cell = document.getElementById(`cell-${i}`);
                 let title = `<div class="cell-name">${data.name}</div>`;
                 let price = '';
+                
+                // 대지 구매 시 전체가 아닌 하단 금액 영역만 플레이어 색으로 표시
                 if (data.type === TYPES.CITY) {
                     if (data.owner !== null) {
-                        price = `<div class="cell-price" style="color:${players[data.owner].color}">대여료:${formatMoney(getToll(i))}</div>`;
-                        cell.style.backgroundColor = players[data.owner].color + '26';
+                        price = `<div class="cell-price" style="background-color:${players[data.owner].color}; color:#ffffff; border-top:none;">대여료:${formatMoney(getToll(i))}</div>`;
                     } else {
-                        price = `<div class="cell-price">구입:${formatMoney(data.price)}</div>`;
-                        cell.style.backgroundColor = 'var(--cell-bg)';
+                        price = `<div class="cell-price" style="background-color:#f1f5f9; color:#475569;">구입:${formatMoney(data.price)}</div>`;
                     }
+                    cell.style.backgroundColor = 'var(--cell-bg)'; // 카드의 메인 바탕은 화이트로 깔끔하게 유지
                 }
 
                 // 🏠 입체 이소메트릭 건물 렌더링
@@ -812,7 +835,7 @@
                 p.inSpace = true; localLog(`**컬럼비아호 특권**으로 전 대륙 무료 차세대 초정밀 워프 대기.`); finishTurn(false);
             } else {
                 showModal("우주 공항", "공항 이용관세 20만원을 청구하고 은하계 초광속 정밀 도약 카드를 획득하시겠습니까?", [
-                    { text: "은하 궤도 진입", onClick: () => payAmount(20, columbia.owner, () => { p.inSpace = true; localLog(`궤도 우주선 정박.`); finishTurn(false); })},
+                    { text: "銀河 궤도 진입", onClick: () => payAmount(20, columbia.owner, () => { p.inSpace = true; localLog("궤도 우주선 정박."); finishTurn(false); })},
                     { text: "거부", class: "btn-secondary", onClick: () => finishTurn(isDouble) }
                 ]);
             }
