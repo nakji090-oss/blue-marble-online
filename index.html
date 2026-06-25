@@ -53,10 +53,7 @@
             font-size: 16px; 
             text-align: center; 
         }
-        .screen-panel input:focus, .screen-panel select:focus {
-            outline: none;
-            border-color: #38bdf8;
-        }
+        .screen-panel input:focus, .screen-panel select:focus { outline: none; border-color: #38bdf8; }
         .screen-panel button { 
             width: 100%; 
             padding: 15px; 
@@ -80,77 +77,45 @@
 
         .player-list { list-style: none; padding: 0; margin-bottom: 20px; text-align: left; }
         .player-list li { 
-            padding: 12px; 
-            background: #0f172a; 
-            border-left: 5px solid #64748b; 
-            margin-bottom: 8px; 
-            font-weight: bold; 
-            border-radius: 6px; 
-            color: #e2e8f0;
+            padding: 12px; background: #0f172a; border-left: 5px solid #64748b; 
+            margin-bottom: 8px; font-weight: bold; border-radius: 6px; color: #e2e8f0;
         }
 
         /* 게임 메인 레이아웃 */
         .game-screen { display: none; width: 100%; max-width: 1280px; gap: 15px; flex-wrap: wrap; justify-content: center; }
         .header-bar { 
-            width: 100%; 
-            background: #1e293b; 
-            color: white; 
-            padding: 12px 20px; 
-            border-radius: 12px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            font-weight: bold; 
-            margin-bottom: 10px;
-            border: 1px solid #334155;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%; background: #1e293b; color: white; padding: 12px 20px; 
+            border-radius: 12px; display: flex; justify-content: space-between; 
+            align-items: center; font-weight: bold; margin-bottom: 10px;
+            border: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         /* 반응형 메인 보드판 */
         .board-container { flex: 1 1 500px; max-width: 800px; width: 100%; aspect-ratio: 1 / 1; position: relative; }
         .board {
             width: 100%; height: 100%; display: grid;
-            grid-template-columns: repeat(11, 1fr);
-            grid-template-rows: repeat(11, 1fr);
+            grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr);
             gap: 2px; background-color: var(--board-bg); padding: 4px;
-            border: 6px solid #0284c7; border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            border: 6px solid #0284c7; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
 
         /* 각 보드 칸 스타일링 */
         .cell {
-            background-color: var(--cell-bg); 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            justify-content: space-between; 
-            text-align: center;
-            font-size: min(1.6vw, 10px); 
-            padding: 0; 
-            position: relative; 
-            overflow: hidden;
-            border: 2px solid #e2e8f0;
-            color: var(--text-dark);
+            background-color: var(--cell-bg); display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between; text-align: center;
+            font-size: min(1.6vw, 10px); padding: 0; position: relative; 
+            overflow: hidden; border: 2px solid #e2e8f0; color: var(--text-dark);
             transition: background-color 0.2s, border-color 0.2s;
         }
         @media (min-width: 800px) { .cell { font-size: 10px; } }
 
         .cell-name { font-weight: 800; font-size: 1.05em; line-height: 1.1; word-break: keep-all; z-index: 2; margin-top: 5px; padding: 0 2px; }
         .cell-icon { width: 22px; height: 22px; margin: 2px 0; z-index: 2; }
-        
         .cell-price { 
-            font-size: min(1.5vw, 9.5px); 
-            font-weight: 850; 
-            color: #475569; 
-            z-index: 5; 
-            width: 100%;
-            padding: 4px 2px;
-            text-align: center;
-            background-color: rgba(255, 255, 255, 0.85); 
-            border-top: 1px solid #e2e8f0;
-            transition: all 0.2s;
-            margin-top: auto; 
-            position: relative;
+            font-size: min(1.5vw, 9.5px); font-weight: 850; color: #475569; z-index: 5; 
+            width: 100%; padding: 4px 2px; text-align: center;
+            background-color: rgba(255, 255, 255, 0.85); border-top: 1px solid #e2e8f0;
+            transition: all 0.2s; margin-top: auto; position: relative;
         }
         
         .corner { background-color: #fef08a; }
@@ -166,12 +131,9 @@
         .center-space {
             grid-column: 2 / 11; grid-row: 2 / 11; background-color: #0b0f19;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-radius: 8px; position: relative; gap: 20px;
-            border: 2px dashed #1e293b;
-            overflow: hidden;
+            border-radius: 8px; position: relative; gap: 20px; border: 2px dashed #1e293b; overflow: hidden;
         }
         
-        /* 자전하는 3D 입체 지구본 */
         .globe-container {
             width: 160px; height: 160px; border-radius: 50%;
             box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(56, 189, 248, 0.4);
@@ -185,7 +147,6 @@
         }
         @keyframes rotateGlobe { 0% { background-position: 0px 0; } 100% { background-position: -320px 0; } }
 
-        /* 주사위 애니메이션 패널 */
         .dice-panel { display: flex; gap: 15px; background: rgba(15, 23, 42, 0.8); padding: 12px 20px; border-radius: 12px; align-items: center; z-index: 2; border: 1px solid #334155; }
         .dice { width: 52px; height: 52px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; box-shadow: 0 6px 12px rgba(0,0,0,0.3); color: #1e293b; border: 2px solid #cbd5e1; }
         .rolling { animation: roll 0.4s infinite; }
@@ -195,15 +156,12 @@
         .btn-roll-center:hover { background-color: #dc2626; transform: scale(1.05); }
         .btn-roll-center:disabled { background-color: #475569; cursor: not-allowed; transform: none; box-shadow: none; border-color: #64748b; color: #94a3b8; }
 
-        /* 랜드마크 SVG 일러스트 배치 영역 */
         .landmark-art { position: absolute; width: 76%; height: 48%; bottom: 24%; left: 12%; opacity: 0.8; z-index: 1; display: flex; align-items: center; justify-content: center; pointer-events: none; }
         .landmark-art svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
 
-        /* 플레이어 토큰 배치 */
         .players-wrap { position: absolute; bottom: 25px; left: 0; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; z-index: 6; }
-        .player-token { width: min(3vw, 16px); height: min(3vw, 16px); border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: all 0.15s ease-out; }
+        .player-token { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: all 0.15s ease-out; }
         
-        /* 입체 건물 전용 영역 및 고유 스타일 */
         .buildings-wrap { position: absolute; top: 2px; width: 90%; display: flex; justify-content: center; gap: 2px; z-index: 3; }
         .bld-mini { width: 14px; height: 14px; display: inline-block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
         .bld-mini svg { width: 100%; height: 100%; }
@@ -227,7 +185,6 @@
         .modal p { color: #cbd5e1; line-height: 1.6; font-size: 15px; margin-bottom: 20px;}
         .modal-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
         .modal-buttons button { flex: 1 1 120px; padding: 14px; font-weight: 800; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-        
         .sell-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border: 1px solid #334155; margin-bottom: 8px; border-radius: 8px; text-align: left; color: #e2e8f0; }
         select { padding: 12px; font-size: 16px; width: 100%; margin-bottom: 15px; border-radius: 8px; background: #0f172a; color: white; border: 1px solid #475569; }
     </style>
@@ -237,7 +194,7 @@
     <!-- 1. 로딩 대기창 -->
     <div class="screen-panel" id="auth-screen">
         <h2>서버 연결 중...</h2>
-        <p>네트워크 인증 정보를 확인 중입니다.</p>
+        <p>글로벌 네트워크 보안 인증 정보 확인 중입니다.</p>
     </div>
 
     <!-- 2. 게임 모드 선택 로비 -->
@@ -252,10 +209,10 @@
             <option value="2">2인 플레이 (나 + AI 1명)</option>
         </select>
         
-        <button class="btn-purple" onclick="startSingleGame()">싱글 플레이 시작</button>
+        <button class="btn-purple" onclick="startSingleGame()">싱글 플레이 시작 (vs 컴퓨터)</button>
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #334155;">
-        <button class="btn-primary" onclick="showOnlineSetup()">🌐 온라인 방 만들기</button>
-        <button class="btn-primary" style="background:#0369a1;" onclick="showOnlineJoin()">🌐 온라인 방 참여</button>
+        <button class="btn-primary" onclick="showOnlineSetup()">🌐 온라인 멀티 방 만들기</button>
+        <button class="btn-primary" style="background:#0369a1;" onclick="showOnlineJoin()">🌐 온라인 멀티 방 참여</button>
     </div>
 
     <!-- 2-B. 온라인 개설 폼 -->
@@ -318,7 +275,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // ⭐ 파이어베이스 설정: 알려주신 키값 적용 완료
+        // ⭐ 사용자가 알려준 정확한 파이어베이스 Config 적용
         const firebaseConfig = {
             apiKey: "AIzaSyArjDU8g5xz6P_gRwN1o3A0RglFgtRuD4A",
             authDomain: "burumbul-online.firebaseapp.com",
@@ -342,7 +299,7 @@
         let myPlayerIdx = -1;
         let isSinglePlay = false; 
 
-        // ⭐ 턴 멈춤 방지용 플래그 및 타이머 추가
+        // ⭐ 턴 무한 대기 버그 해결을 위한 상태 관리 변수
         let isTurnExecuting = false;
         let aiTimeout = null;
 
@@ -432,49 +389,6 @@
             hotel: `<svg viewBox="0 0 120 120"><polygon points="60,10 20,35 60,60 100,35" fill="#f87171" stroke="#991b1b" stroke-width="3"/><polygon points="20,35 60,60 60,115 20,90" fill="#ef4444" stroke="#991b1b" stroke-width="3"/><polygon points="100,35 60,60 60,115 100,90" fill="#b91c1c" stroke="#991b1b" stroke-width="3"/><rect x="35" y="55" width="8" height="10" fill="#fbbf24"/><rect x="77" y="55" width="8" height="10" fill="#fbbf24"/></svg>`
         };
 
-        const boardData = [
-            { name: "출발", type: TYPES.START },
-            { name: "타이베이", type: TYPES.CITY, color: 'red', price: 5, build: [5, 15, 25], toll: [0.2, 1, 9, 25], art: 'taipei' },
-            { name: "황금열쇠", type: TYPES.KEY },
-            { name: "베이징", type: TYPES.CITY, color: 'red', price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45], art: 'beijing' },
-            { name: "마닐라", type: TYPES.CITY, color: 'red', price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45], art: 'manila' },
-            { name: "제주도", type: TYPES.CITY, color: 'black', price: 20, toll: [30], noBuild: true, art: 'jeju' },
-            { name: "싱가폴", type: TYPES.CITY, color: 'red', price: 10, build: [5, 15, 25], toll: [0.6, 3, 27, 55], art: 'singapore' },
-            { name: "황금열쇠", type: TYPES.KEY },
-            { name: "카이로", type: TYPES.CITY, color: 'red', price: 10, build: [5, 15, 25], toll: [0.6, 3, 27, 55], art: 'cairo' },
-            { name: "이스탄불", type: TYPES.CITY, color: 'red', price: 12, build: [5, 15, 25], toll: [0.8, 4, 30, 60], art: 'istanbul' },
-            { name: "무인도", type: TYPES.ISLAND },
-            { name: "아테네", type: TYPES.CITY, color: 'yellow', price: 14, build: [10, 30, 50], toll: [1, 5, 45, 75], art: 'athens' },
-            { name: "황금열쇠", type: TYPES.KEY },
-            { name: "코펜하겐", type: TYPES.CITY, color: 'yellow', price: 16, build: [10, 30, 50], toll: [1.2, 6, 50, 90], art: 'copenhagen' },
-            { name: "스톡홀름", type: TYPES.CITY, color: 'yellow', price: 16, build: [10, 30, 50], toll: [1.2, 6, 50, 90], art: 'stockholm' },
-            { name: "콩코드 여객기", type: TYPES.CITY, color: 'vehicle', price: 20, toll: [30], noBuild: true, art: 'concorde' },
-            { name: "베른", type: TYPES.CITY, color: 'yellow', price: 18, build: [10, 30, 50], toll: [1.4, 7, 50, 95], art: 'bern' },
-            { name: "황금열쇠", type: TYPES.KEY },
-            { name: "베를린", type: TYPES.CITY, color: 'yellow', price: 18, build: [10, 30, 50], toll: [1.4, 7, 50, 95], art: 'berlin' },
-            { name: "오타와", type: TYPES.CITY, color: 'yellow', price: 20, build: [10, 30, 50], toll: [1.6, 8, 55, 100], art: 'ottawa' },
-            { name: "사회복지기금", type: TYPES.FUND_RECV },
-            { name: "부에노스<br>아이레스", type: TYPES.CITY, color: 'green', price: 22, build: [15, 45, 75], toll: [1.8, 9, 70, 105], art: 'buenos_aires' },
-            { name: "황금열쇠", type: TYPES.KEY },
-            { name: "상파울루", type: TYPES.CITY, color: 'green', price: 24, build: [15, 45, 75], toll: [2, 10, 75, 110], art: 'sao_paulo' },
-            { name: "시드니", type: TYPES.CITY, color: 'green', price: 24, build: [15, 45, 75], toll: [2, 10, 75, 110], art: 'sydney' },
-            { name: "부산", type: TYPES.CITY, color: 'black', price: 50, toll: [60], noBuild: true, art: 'busan' },
-            { name: "하와이", type: TYPES.CITY, color: 'green', price: 26, build: [15, 45, 75], toll: [2.2, 11, 80, 115], art: 'hawaii' },
-            { name: "리스본", type: TYPES.CITY, color: 'green', price: 26, build: [15, 45, 75], toll: [2.2, 11, 80, 115], art: 'lisbon' },
-            { name: "퀸엘리자베스호", type: TYPES.CITY, color: 'vehicle', price: 30, toll: [25], noBuild: true, art: 'ship' },
-            { name: "마드리드", type: TYPES.CITY, color: 'green', price: 28, build: [15, 45, 75], toll: [2.4, 12, 85, 120], art: 'madrid' },
-            { name: "우주여행", type: TYPES.TRAVEL },
-            { name: "도쿄", type: TYPES.CITY, color: 'blue', price: 30, build: [20, 60, 100], toll: [2.6, 13, 90, 127], art: 'tokyo' },
-            { name: "컬럼비아호", type: TYPES.CITY, color: 'vehicle', price: 45, toll: [40], noBuild: true, art: 'shuttle' },
-            { name: "파리", type: TYPES.CITY, color: 'blue', price: 32, build: [20, 60, 100], toll: [2.8, 15, 100, 140], art: 'paris' },
-            { name: "로마", type: TYPES.CITY, color: 'blue', price: 32, build: [20, 60, 100], toll: [2.8, 15, 100, 140], art: 'rome' },
-            { name: "황금열쇠", type: TYPES.KEY },
-            { name: "런던", type: TYPES.CITY, color: 'blue', price: 35, build: [20, 60, 100], toll: [3.5, 17, 110, 150], art: 'london' },
-            { name: "뉴욕", type: TYPES.CITY, color: 'blue', price: 35, build: [20, 60, 100], toll: [3.5, 17, 110, 150], art: 'newyork' },
-            { name: "국세청", type: TYPES.TAX },
-            { name: "서울", type: TYPES.CITY, color: 'black', price: 100, toll: [200], noBuild: true, art: 'seoul' }
-        ];
-
         boardData.forEach(cell => { cell.owner = null; cell.buildings = [0, 0, 0]; });
 
         onAuthStateChanged(auth, user => {
@@ -485,12 +399,7 @@
             }
         });
 
-        signInAnonymously(auth).catch((error) => {
-            console.error("인증 실패:", error);
-            document.getElementById('auth-screen').innerHTML = "<h2>연결 실패</h2><p>서버 접속에 문제가 발생했습니다. 새로고침 해주세요.</p>";
-        });
-
-        // ⭐ 버튼 액션 글로벌 연결
+        // ⭐ 버튼 기능들 (HTML에서 접근 가능하도록 window 객체에 선언)
         window.showOnlineSetup = () => {
             resumeAudioContext();
             document.getElementById('lobby-screen').style.display = 'none';
@@ -507,16 +416,16 @@
             document.getElementById('lobby-screen').style.display = 'block';
         };
 
-        // ⭐ 1. 싱글 플레이 (나 vs 인공지능) 모드
+        // ⭐ 1. 싱글 플레이 모드 시작
         window.startSingleGame = () => {
-            resumeAudioContext();
+            resumeAudioContext(); 
             const nameInput = document.getElementById('input-nickname').value.trim();
             userName = nameInput ? nameInput : "대부호";
             
             isSinglePlay = true;
             roomRef = null; 
-            myPlayerIdx = 0;
-            isTurnExecuting = false; // 턴 제어 상태 초기화
+            myPlayerIdx = 0; 
+            isTurnExecuting = false; // 턴 멈춤 방지 초기화
 
             const totalPlayers = parseInt(document.getElementById('select-players').value);
 
@@ -528,15 +437,8 @@
             for (let i = 1; i < totalPlayers; i++) {
                 players.push({
                     uid: 'ai' + i, 
-                    name: aiNames[i-1], 
-                    color: colors[i], 
-                    money: 300, 
-                    pos: 0, 
-                    islandTurns: 0, 
-                    isBankrupt: false, 
-                    items: {free_pass:0, island_card:0}, 
-                    inSpace: false, 
-                    isAI: true
+                    name: aiNames[i-1], color: colors[i], money: 300, pos: 0, islandTurns: 0, 
+                    isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, isAI: true
                 });
             }
 
@@ -550,9 +452,10 @@
             document.getElementById('header-mode-info').innerText = `싱글 플레이 (${totalPlayers}인전)`;
             document.getElementById('header-nickname').innerText = userName;
 
-            // 로컬 동기화 실행
+            // 로컬 데이터를 그대로 활용하여 첫 동기화
             syncFromNetwork({
-                players, curP, socialFund, deck, logs: gameLogs,
+                players: JSON.parse(JSON.stringify(players)),
+                curP: curP, socialFund: socialFund, deck: deck, logs: gameLogs,
                 boardState: boardData.map(c => ({owner: c.owner, buildings: c.buildings}))
             });
         };
@@ -637,7 +540,7 @@
             await updateDoc(roomRef, { status: 'playing', players: initPlayers, logs: [...state.logs, "글로벌 매치 기동!"] });
         };
 
-        // --- 공통 렌더링 및 동기화 ---
+        // --- ⭐ 공통 동기화 엔진 및 렌더링 (버그 완전히 잡은 부분) ---
         function syncFromNetwork(state) {
             players = state.players || []; 
             curP = state.curP !== undefined ? state.curP : 0; 
@@ -649,12 +552,12 @@
                 state.boardState.forEach((b, i) => { 
                     if (boardData[i]) {
                         boardData[i].owner = (b && b.owner !== undefined) ? b.owner : null; 
-                        boardData[i].buildings = (b && b.buildings) ? b.buildings : [0,0,0]; 
+                        boardData[i].buildings = (b && b.buildings) ? [...b.buildings] : [0,0,0]; 
                     }
                 });
             }
 
-            // ⭐ UI 렌더링을 먼저 수행하여 주사위 버튼이 DOM에 확실히 존재하게 만듭니다.
+            // ⭐ UI를 즉시 강제 업데이트하여 버튼 상태와 토큰이 먼저 보이게 함
             renderBoard(); 
             renderPanel(); 
             renderLogs();
@@ -666,25 +569,22 @@
             const rollBtn = document.getElementById('btn-roll-center');
             const activePlayer = players[curP];
 
+            // AI의 턴 멈춤을 방지하기 위한 강력한 중앙 제어 타워
             if (rollBtn) {
                 if (activePlayer && activePlayer.isAI) {
                     rollBtn.disabled = true;
-                    rollBtn.innerText = "컴퓨터 대기 중...";
+                    rollBtn.innerText = "컴퓨터 생각 중...";
                     
-                    // ⭐ AI 턴 멈춤 버그 해결: 턴이 실행 중이 아닐 때만 AI 로직 호출
                     if ((isSinglePlay || isHost) && !isTurnExecuting) {
                         clearTimeout(aiTimeout);
-                        aiTimeout = setTimeout(executeAILogic, 1200);
+                        // AI가 주사위를 굴리기 전 1초 대기
+                        aiTimeout = setTimeout(executeAILogic, 1000);
                     }
                 } else if (isSinglePlay || curP === myPlayerIdx) {
                     if (activePlayer && !activePlayer.isBankrupt) {
-                        if (!isTurnExecuting) {
-                            rollBtn.disabled = false;
-                            rollBtn.innerText = "주사위 굴리기 🎲";
-                        } else {
-                            rollBtn.disabled = true;
-                            rollBtn.innerText = "차례 진행 중...";
-                        }
+                        isTurnExecuting = false; // 사람이 주사위를 누를 수 있게 강제 해제
+                        rollBtn.disabled = false;
+                        rollBtn.innerText = "주사위 굴리기 🎲";
                     }
                 } else {
                     rollBtn.disabled = true;
@@ -692,7 +592,7 @@
                 }
             }
 
-            // 파산자 차례 자동으로 넘기기
+            // 파산자 차례 자동 넘기기
             if (activePlayer && activePlayer.isBankrupt && !isTurnExecuting) {
                 if (isSinglePlay || (isHost && activePlayer.isAI) || curP === myPlayerIdx) {
                     let limit = 0;
@@ -705,8 +605,11 @@
         async function uploadGameState() {
             if (isSinglePlay) {
                 syncFromNetwork({
-                    players, curP, socialFund, deck, logs: gameLogs,
-                    boardState: boardData.map(c => ({owner: c.owner, buildings: c.buildings}))
+                    players: JSON.parse(JSON.stringify(players)), 
+                    curP: curP, socialFund: socialFund, 
+                    deck: JSON.parse(JSON.stringify(deck)), 
+                    logs: JSON.parse(JSON.stringify(gameLogs)),
+                    boardState: boardData.map(c => ({owner: c.owner, buildings: c.buildings ? [...c.buildings] : null}))
                 });
                 return;
             }
@@ -718,9 +621,11 @@
             }
         }
 
+        // ⭐ 로그가 발생하면 화면(UI)에 즉각 반영하여 "아무것도 안 하는 것처럼" 보이는 버그를 완벽 해결!
         function localLog(msg) { 
             if (players[curP]) { gameLogs.push(`[${players[curP].name}] ${msg}`); } 
             else { gameLogs.push(`[시스템] ${msg}`); }
+            renderLogs(); // 로그 즉시 업데이트
         }
         function renderLogs() { const l = document.getElementById('log'); l.innerHTML = gameLogs.map(g => `<p>> ${g}</p>`).join(''); l.scrollTop = l.scrollHeight; }
 
@@ -800,7 +705,7 @@
                 cell.innerHTML = title + iconHtml + artHtml + priceHtml + `<div class="buildings-wrap">${bStr}</div><div class="players-wrap" id="players-${i}"></div>`;
             });
 
-            // 플레이어 말 안착
+            // 플레이어 말 안착 (크기 고정으로 무조건 보이게 설정)
             players.forEach((p, idx) => {
                 if(!p || p.isBankrupt) return;
                 const wrap = document.getElementById(`players-${p.pos}`);
@@ -833,45 +738,50 @@
             });
         }
 
-        // --- 🤖 인공지능(AI) 주사위 굴리기 및 의사결정 엔진 ---
+        // --- 🤖 완벽히 수정된 AI 의사결정 엔진 ---
         function executeAILogic() {
-            const ai = players[curP];
-            if (!ai || !ai.isAI || ai.isBankrupt) return;
-            if (isTurnExecuting) return;
+            try {
+                const ai = players[curP];
+                if (!ai || !ai.isAI || ai.isBankrupt) return;
+                if (isTurnExecuting) return; // 중복 실행 절대 차단
 
-            isTurnExecuting = true;
+                isTurnExecuting = true;
 
-            if (ai.islandTurns > 0) {
-                rollAnimation((d1, d2) => {
-                    if (d1 === d2) {
-                        localLog(`더블(${d1},${d2}) 기적으로 무인도를 즉시 탈출합니다!`);
-                        ai.islandTurns = 0; movePlayerAnimated(d1 + d2, true);
-                    } else {
-                        ai.islandTurns--; localLog(`무인도에서 사색 중 (${d1},${d2}). 남은 수감 기간: ${ai.islandTurns}턴`); finishTurn(false);
-                    }
-                });
-                return;
-            }
-
-            if (ai.inSpace) {
-                let targetPos = 39; 
-                if (boardData[39].owner !== null && boardData[39].owner === curP) {
-                    let myCities = []; boardData.forEach((c, idx) => { if(c.owner === curP && idx !== 39) myCities.push(idx); });
-                    if (myCities.length > 0) targetPos = myCities[myCities.length - 1]; else targetPos = 1; 
+                if (ai.islandTurns > 0) {
+                    rollAnimation((d1, d2) => {
+                        if (d1 === d2) {
+                            localLog(`더블(${d1},${d2}) 기적으로 무인도를 즉시 탈출합니다!`);
+                            ai.islandTurns = 0; movePlayerAnimated(d1 + d2, true);
+                        } else {
+                            ai.islandTurns--; localLog(`무인도에서 사색 중 (${d1},${d2}). 남은 수감 기간: ${ai.islandTurns}턴`); finishTurn(false);
+                        }
+                    });
+                    return;
                 }
-                ai.inSpace = false;
-                localLog(`🚀 우주 도약 개시! 워프 대상지: ${boardData[targetPos].name}`);
-                movePlayerAnimated(targetPos - ai.pos, false, true);
-                return;
-            }
 
-            rollAnimation((d1, d2) => {
-                localLog(`주사위 구동: ${d1}, ${d2} (총합 ${d1+d2}칸 전진) ${d1===d2?'[더블]':''}`);
-                movePlayerAnimated(d1 + d2, d1 === d2);
-            });
+                if (ai.inSpace) {
+                    let targetPos = 39; 
+                    if (boardData[39].owner !== null && boardData[39].owner === curP) {
+                        let myCities = []; boardData.forEach((c, idx) => { if(c.owner === curP && idx !== 39) myCities.push(idx); });
+                        if (myCities.length > 0) targetPos = myCities[myCities.length - 1]; else targetPos = 1; 
+                    }
+                    ai.inSpace = false;
+                    localLog(`🚀 우주 도약 개시! 워프 대상지: ${boardData[targetPos].name}`);
+                    movePlayerAnimated(targetPos - ai.pos, false, true);
+                    return;
+                }
+
+                rollAnimation((d1, d2) => {
+                    localLog(`주사위 구동: ${d1}, ${d2} (총합 ${d1+d2}칸 전진) ${d1===d2?'[더블]':''}`);
+                    movePlayerAnimated(d1 + d2, d1 === d2);
+                });
+            } catch (err) {
+                console.error("AI 에러 발생:", err);
+                isTurnExecuting = false;
+                finishTurn(false); // 에러가 나더라도 무조건 다음 사람에게 턴을 넘겨 멈춤 방지
+            }
         }
 
-        // 사용자 주사위 클릭 액션
         window.handleDiceClick = () => {
             const p = players[curP];
             if (!p || p.isAI) return;
@@ -915,7 +825,7 @@
             if (force) {
                 let newPos = (p.pos + amount + 40) % 40;
                 if (newPos < p.pos && newPos !== 10) { p.money += 20; localLog(`출발선 통과! 월급 20만원 수령.`); }
-                p.pos = newPos; playMoveSound(); renderBoard(); handleCellAction(isDouble);
+                p.pos = newPos; playMoveSound(); renderBoard(); await uploadGameState(); handleCellAction(isDouble);
                 return;
             }
 
@@ -974,7 +884,9 @@
                     let upgraded = false;
                     for (let t = 2; t >= 0; t--) {
                         if (cell.buildings && !cell.buildings[t] && p.money >= (cell.build[t] + 15)) {
-                            payAmount(cell.build[t], null, () => { cell.buildings[t] = 1; localLog(`${cell.name} 영토에 ${t===2?'호텔':(t===1?'빌딩':'별장')} 완공.`); upgraded = true; }); break;
+                            upgraded = true; // 🌟 AI 증축 시 턴이 멈추는 버그 완벽 픽스!
+                            payAmount(cell.build[t], null, () => { cell.buildings[t] = 1; localLog(`${cell.name} 영토에 ${t===2?'호텔':(t===1?'빌딩':'별장')} 완공.`); finishTurn(isDouble); }); 
+                            break;
                         }
                     }
                     if (!upgraded) finishTurn(isDouble);
@@ -1097,7 +1009,8 @@
                 let limit = 0; 
                 do { curP = (curP + 1) % players.length; limit++; } while (players[curP] && players[curP].isBankrupt && limit < 10); 
             }
-            isTurnExecuting = false; // 턴 종료, 다음 턴 활성화
+            
+            isTurnExecuting = false; // ⭐ 무조건 턴 제어 풀어주어 다음 플레이어로 진행 가능하게 함
             await uploadGameState(); 
         }
 
@@ -1149,7 +1062,9 @@
 
         function drawKey(isDouble) {
             if(deck.length === 0) deck = createDeck(); const card = deck.pop();
-            if (players[curP] && players[curP].isAI) { localLog(`황금열쇠 뽑음 -> [${card.desc}]`); executeKey(card, isDouble); return; }
+            
+            // AI는 로그 찍고 바로 실행, 사용자는 모달 띄우기
+            if (players[curP] && players[curP].isAI) { localLog(`황금열쇠 획득 -> [${card.desc}]`); executeKey(card, isDouble); return; }
             showModal("🔑 황금열쇠 해독", `<p style="font-size:16px; font-weight:bold;">${card.desc}</p>`, [{ text: "카드 실행", onClick: () => executeKey(card, isDouble) }]);
         }
 
@@ -1183,7 +1098,6 @@
             document.getElementById('modal-overlay').style.display = 'flex';
         }
         window.alertMsg = function(m) { showModal("경고 및 알림", `<p>${m}</p>`, [{ text: "확인", onClick:()=>{} }]); }
-
     </script>
 </body>
 </html>
