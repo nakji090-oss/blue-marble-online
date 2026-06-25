@@ -234,13 +234,11 @@
 </head>
 <body>
 
-    <!-- 1. 로딩 대기창 -->
     <div class="screen-panel" id="auth-screen">
         <h2>서버 연결 중...</h2>
         <p>글로벌 네트워크 보안 인증 정보 확인 중입니다.</p>
     </div>
 
-    <!-- 2. 게임 모드 선택 로비 -->
     <div class="screen-panel" id="lobby-screen" style="display: none;">
         <h2>부루마불 랜드마크 에디션 🌐</h2>
         <p>닉네임을 입력하고 게임 모드를 선택해 주세요.</p>
@@ -258,7 +256,6 @@
         <button class="btn-primary" style="background:#0369a1;" onclick="showOnlineJoin()">🌐 온라인 멀티 방 참여</button>
     </div>
 
-    <!-- 2-B. 온라인 개설 폼 -->
     <div class="screen-panel" id="online-create-panel" style="display: none;">
         <h2>방 만들기</h2>
         <p>방을 생성하면 4자리 대기 번호가 생성됩니다.</p>
@@ -266,7 +263,6 @@
         <button class="btn-secondary" style="background:#475569;" onclick="backToLobby()">뒤로가기</button>
     </div>
 
-    <!-- 2-C. 온라인 가입 폼 -->
     <div class="screen-panel" id="online-join-panel" style="display: none;">
         <h2>방 참여하기</h2>
         <p>생성된 4자리 대기실 번호를 정확히 적어주세요.</p>
@@ -275,7 +271,6 @@
         <button class="btn-secondary" style="background:#475569;" onclick="backToLobby()">뒤로가기</button>
     </div>
 
-    <!-- 3. 대기실 -->
     <div class="screen-panel" id="waiting-screen" style="display: none;">
         <h2>대기실 (코드: <span id="display-roomcode" style="color:#fbbf24;"></span>)</h2>
         <p>함께 대전할 플레이어들이 들어오면 시작하세요.</p>
@@ -284,7 +279,6 @@
         <p id="waiting-msg" style="color:#94a3b8; font-size:14px; font-weight: 700;">방장이 게임을 개시할 때까지 대기해주세요...</p>
     </div>
 
-    <!-- 4. 게임 화면 -->
     <div class="game-screen" id="game-screen">
         <div class="header-bar">
             <span id="header-mode-info">방 번호: -</span>
@@ -294,8 +288,7 @@
 
         <div class="board-container">
             <div class="board" id="board">
-                <!-- 보드 칸들이 자바스크립트로 동적 생성됨 -->
-            </div>
+                </div>
         </div>
 
         <div class="controls">
@@ -304,7 +297,6 @@
         </div>
     </div>
 
-    <!-- 범용 팝업 다이얼로그 -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal" id="modal-content">
             <h3 id="modal-title">알림</h3>
@@ -432,6 +424,65 @@
             hotel: `<svg viewBox="0 0 120 120"><polygon points="60,10 20,35 60,60 100,35" fill="#f87171" stroke="#991b1b" stroke-width="3"/><polygon points="20,35 60,60 60,115 20,90" fill="#ef4444" stroke="#991b1b" stroke-width="3"/><polygon points="100,35 60,60 60,115 100,90" fill="#b91c1c" stroke="#991b1b" stroke-width="3"/><rect x="35" y="55" width="8" height="10" fill="#fbbf24"/><rect x="77" y="55" width="8" height="10" fill="#fbbf24"/></svg>`
         };
 
+        // ⭐ 40개 보드판 메인 데이터 배열 (필수)
+        const boardData = [
+            { name: "출발", type: TYPES.START }, // 0
+            { name: "타이베이", type: TYPES.CITY, color: "red", price: 5, build: [5, 15, 25], art: "taipei" }, // 1
+            { name: "황금열쇠", type: TYPES.KEY }, // 2
+            { name: "베이징", type: TYPES.CITY, color: "red", price: 8, build: [5, 15, 25], art: "beijing" }, // 3
+            { name: "마닐라", type: TYPES.CITY, color: "red", price: 8, build: [5, 15, 25], art: "manila" }, // 4
+            { name: "제주도", type: TYPES.CITY, color: "vehicle", price: 20, noBuild: true, art: "jeju" }, // 5
+            { name: "싱가포르", type: TYPES.CITY, color: "red", price: 10, build: [10, 30, 50], art: "singapore" }, // 6
+            { name: "황금열쇠", type: TYPES.KEY }, // 7
+            { name: "카이로", type: TYPES.CITY, color: "red", price: 10, build: [10, 30, 50], art: "cairo" }, // 8
+            { name: "이스탄불", type: TYPES.CITY, color: "red", price: 12, build: [10, 30, 50], art: "istanbul" }, // 9
+            { name: "무인도", type: TYPES.ISLAND }, // 10
+            { name: "아테네", type: TYPES.CITY, color: "yellow", price: 14, build: [15, 45, 75], art: "athens" }, // 11
+            { name: "황금열쇠", type: TYPES.KEY }, // 12
+            { name: "코펜하겐", type: TYPES.CITY, color: "yellow", price: 16, build: [15, 45, 75], art: "copenhagen" }, // 13
+            { name: "스톡홀름", type: TYPES.CITY, color: "yellow", price: 16, build: [15, 45, 75], art: "stockholm" }, // 14
+            { name: "콩코드<br>여객기", type: TYPES.CITY, color: "vehicle", price: 20, noBuild: true, art: "concorde" }, // 15
+            { name: "베른", type: TYPES.CITY, color: "yellow", price: 18, build: [15, 45, 75], art: "bern" }, // 16
+            { name: "황금열쇠", type: TYPES.KEY }, // 17
+            { name: "베를린", type: TYPES.CITY, color: "yellow", price: 18, build: [15, 45, 75], art: "berlin" }, // 18
+            { name: "오타와", type: TYPES.CITY, color: "yellow", price: 20, build: [20, 60, 100], art: "ottawa" }, // 19
+            { name: "사회복지<br>기금", type: TYPES.FUND_RECV }, // 20
+            { name: "부에노스<br>아이레스", type: TYPES.CITY, color: "green", price: 22, build: [20, 60, 100], art: "buenos_aires" }, // 21
+            { name: "황금열쇠", type: TYPES.KEY }, // 22
+            { name: "상파울루", type: TYPES.CITY, color: "green", price: 24, build: [20, 60, 100], art: "sao_paulo" }, // 23
+            { name: "시드니", type: TYPES.CITY, color: "green", price: 24, build: [20, 60, 100], art: "sydney" }, // 24
+            { name: "부산", type: TYPES.CITY, color: "vehicle", price: 50, noBuild: true, art: "busan" }, // 25
+            { name: "하와이", type: TYPES.CITY, color: "vehicle", price: 20, noBuild: true, art: "hawaii" }, // 26
+            { name: "리스본", type: TYPES.CITY, color: "green", price: 26, build: [25, 75, 125], art: "lisbon" }, // 27
+            { name: "엘리자베스호", type: TYPES.CITY, color: "vehicle", price: 30, noBuild: true, art: "ship" }, // 28
+            { name: "마드리드", type: TYPES.CITY, color: "green", price: 28, build: [25, 75, 125], art: "madrid" }, // 29
+            { name: "우주여행", type: TYPES.TRAVEL }, // 30
+            { name: "도쿄", type: TYPES.CITY, color: "blue", price: 30, build: [30, 90, 150], art: "tokyo" }, // 31
+            { name: "컬럼비아호", type: TYPES.CITY, color: "vehicle", price: 45, noBuild: true, art: "shuttle" }, // 32
+            { name: "파리", type: TYPES.CITY, color: "blue", price: 32, build: [30, 90, 150], art: "paris" }, // 33
+            { name: "로마", type: TYPES.CITY, color: "blue", price: 32, build: [30, 90, 150], art: "rome" }, // 34
+            { name: "황금열쇠", type: TYPES.KEY }, // 35
+            { name: "런던", type: TYPES.CITY, color: "blue", price: 35, build: [35, 105, 175], art: "london" }, // 36
+            { name: "뉴욕", type: TYPES.CITY, color: "blue", price: 35, build: [35, 105, 175], art: "newyork" }, // 37
+            { name: "기금 납부", type: TYPES.TAX }, // 38
+            { name: "서울", type: TYPES.CITY, color: "black", price: 100, build: [50, 150, 250], art: "seoul" } // 39
+        ];
+
+        // ⭐ 통행료 계산 로직 함수 (필수)
+        function getToll(cellIdx) {
+            const c = boardData[cellIdx];
+            if (!c || c.type !== TYPES.CITY) return 0;
+            let toll = c.price; // 기본 대지료
+            if (c.noBuild) return toll * 2; // 관광지나 탈것은 기본료의 2배 청구
+            if (c.buildings) {
+                if (c.buildings[0]) toll += c.build[0] * 1.5;
+                if (c.buildings[1]) toll += c.build[1] * 2.0;
+                if (c.buildings[2]) toll += c.build[2] * 3.0;
+            }
+            return Math.floor(toll);
+        }
+
+        // 초기화
         boardData.forEach(cell => { cell.owner = null; cell.buildings = [0, 0, 0]; });
 
         // ⭐ 최초 인증 확인 리스너
