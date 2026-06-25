@@ -390,6 +390,7 @@
         const formatMoney = (m) => new Intl.NumberFormat('ko-KR').format(m * 10000) + '원';
         const TYPES = { START: 0, CITY: 1, KEY: 2, ISLAND: 3, TRAVEL: 4, FUND_RECV: 5, FUND_PAY: 6, TAX: 7 };
 
+        // --- 🎵 오디오 엔진 (브라우저 정책 우회 포함) ---
         let audioCtx = null;
 
         function initAudio() {
@@ -397,10 +398,16 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
         }
-
-        // 주사위 우드 롤링 & 바운싱 사운드
-        function playDiceSound() {
+        
+        // 브라우저 AudioContext 강제 활성화 함수 (버튼 클릭 시 호출)
+        function resumeAudioContext() {
             initAudio();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playDiceSound() {
             if (!audioCtx) return;
             
             let count = 0;
@@ -430,9 +437,7 @@
             bounce();
         }
 
-        // 토큰 이동 한 칸당 달그락 사운드
         function playMoveSound() {
-            initAudio();
             if (!audioCtx) return;
             
             let osc = audioCtx.createOscillator();
@@ -552,13 +557,12 @@
             { name: "서울", type: TYPES.CITY, color: 'black', price: 100, toll: [200], noBuild: true, art: 'seoul' }
         ];
 
-        // 모든 영토에 기본적으로 null 소유주 및 빈 건물을 사전 매핑하여 Javascript 오류 원천 방어
+        // 초기화 가드
         boardData.forEach(cell => {
             cell.owner = null;
             cell.buildings = [0, 0, 0];
         });
 
-        // 대기 화면 초기 설정
         onAuthStateChanged(auth, user => {
             if(user) {
                 userId = user.uid;
@@ -568,10 +572,12 @@
         });
 
         window.showOnlineSetup = () => {
+            resumeAudioContext();
             document.getElementById('lobby-screen').style.display = 'none';
             document.getElementById('online-create-panel').style.display = 'block';
         };
         window.showOnlineJoin = () => {
+            resumeAudioContext();
             document.getElementById('lobby-screen').style.display = 'none';
             document.getElementById('online-join-panel').style.display = 'block';
         };
@@ -581,8 +587,9 @@
             document.getElementById('lobby-screen').style.display = 'block';
         };
 
-        // --- 싱글 플레이어 기동 ---
+        // --- 싱글 플레이어 엔진 ---
         window.startSingleGame = () => {
+            resumeAudioContext(); // 사운드 엔진 예열
             const nameInput = document.getElementById('input-nickname').value.trim();
             userName = nameInput ? nameInput : "나";
             isSinglePlay = true;
@@ -617,8 +624,9 @@
             });
         };
 
-        // --- 멀티플레이어 온라인 기동 ---
+        // --- 멀티플레이어 온라인 개설 ---
         window.createRoom = async () => {
+            resumeAudioContext(); // 사운드 엔진 예열
             const nameInput = document.getElementById('input-nickname').value.trim();
             userName = nameInput ? nameInput : "대부호";
             isSinglePlay = false;
@@ -638,6 +646,7 @@
         };
 
         window.joinRoom = async () => {
+            resumeAudioContext(); // 사운드 엔진 예열
             const nameInput = document.getElementById('input-nickname').value.trim();
             const codeInput = document.getElementById('input-roomcode').value.trim();
             if(!codeInput) return alertMsg("방 코드를 올바르게 입력해주세요.");
@@ -692,6 +701,7 @@
             await updateDoc(roomRef, { status: 'playing', players: initPlayers, logs: [...state.logs, "글로벌 매치 기동!"] });
         };
 
+        // 데이터 수신 및 그리기
         function syncFromNetwork(state) {
             players = state.players || []; 
             curP = state.curP !== undefined ? state.curP : 0; 
@@ -699,7 +709,6 @@
             deck = state.deck || []; 
             gameLogs = state.logs || [];
 
-            // 안전한 보드 정보 파싱 및 Null 에러 가드
             if (state.boardState && Array.isArray(state.boardState)) {
                 state.boardState.forEach((b, i) => { 
                     if (boardData[i]) {
@@ -798,7 +807,6 @@
                 let price = '';
                 
                 if (data.type === TYPES.CITY) {
-                    // 소유주 유무 및 유효 플레이어 검증 방어막 (TypeError 방지 핵심 코드)
                     if (data.owner !== null && data.owner !== undefined && players[data.owner]) {
                         price = `<div class="cell-price" style="background-color:${players[data.owner].color}; color:#ffffff; border-top:none; font-weight:900;">대여료:${formatMoney(getToll(i))}</div>`;
                     } else {
@@ -807,7 +815,6 @@
                     cell.style.backgroundColor = 'var(--cell-bg)';
                 }
 
-                // 🏡 입체 3D SVG 건물 구조물 렌더링
                 let bStr = '';
                 if(data.buildings) {
                     if(data.buildings[0]) bStr += `<span class="bld-mini">${buildingSVGs.villa}</span>`;
@@ -815,7 +822,6 @@
                     if(data.buildings[2]) bStr += `<span class="bld-mini">${buildingSVGs.hotel}</span>`;
                 }
 
-                // 🏛️ 도시별 대표 랜드마크 SVG 일러스트 배치
                 let artHtml = '';
                 if (data.art && landmarkSVGs[data.art]) {
                     artHtml = `<div class="landmark-art">${landmarkSVGs[data.art]}</div>`;
@@ -856,7 +862,7 @@
             });
         }
 
-        // --- 🤖 인공지능(AI) 주사위 굴리기 및 의사결정 알고리즘 ---
+        // --- 🤖 인공지능(AI) 주사위 굴리기 및 의사결정 엔진 ---
         function executeAILogic() {
             const ai = players[curP];
             if (!ai || !ai.isAI || ai.isBankrupt) return;
@@ -878,10 +884,12 @@
 
             if (ai.inSpace) {
                 let targetPos = 39; 
-                if (boardData[39].owner !== null && boardData[39].owner !== curP) {
+                // AI 공간 이동 지능 향상: 서울이 빈 땅이거나 남의 땅이면 무조건 서울로. 
+                // 본인 땅이면 본인의 다른 가장 비싼 땅을 찾아 증축 시도.
+                if (boardData[39].owner !== null && boardData[39].owner === curP) {
                     let myCities = [];
-                    boardData.forEach((c, idx) => { if(c.owner === curP) myCities.push(idx); });
-                    if (myCities.length > 0) targetPos = myCities[myCities.length - 1];
+                    boardData.forEach((c, idx) => { if(c.owner === curP && idx !== 39) myCities.push(idx); });
+                    if (myCities.length > 0) targetPos = myCities[myCities.length - 1]; // 뒤쪽 칸일수록 비싸므로 유리
                     else targetPos = 1; 
                 }
                 ai.inSpace = false;
@@ -1043,7 +1051,7 @@
                             break;
                         }
                     }
-                    finishTurn(isDouble);
+                    if (!upgraded) finishTurn(isDouble);
                 } else {
                     let html = `현재 잔고: ${formatMoney(p.money)}<br><br>`;
                     let o = [];
@@ -1083,6 +1091,7 @@
             }
         }
 
+        // --- 무결점 파산 및 매각 시스템 ---
         function showSellModal(debt, toIdx, successCb) {
             const p = players[curP];
             if (!p) return;
@@ -1162,8 +1171,12 @@
                         }
                     }
                 });
+                
+                // 모달 강제 닫힘(파산) 제어 버그 수정
                 if (!exist) {
-                     document.getElementById('modal-overlay').style.display = 'none'; localLog(`자산 임계치 도달. 최종 파산.`); p.isBankrupt = true;
+                     document.getElementById('modal-overlay').style.display = 'none'; 
+                     localLog(`자산 임계치 도달. 최종 파산.`); 
+                     p.isBankrupt = true;
                      boardData.forEach(c => { if(c.owner === curP) c.owner = (toIdx === 'fund' ? null : toIdx); });
                      if(toIdx !== null && toIdx !== 'fund' && players[toIdx]) players[toIdx].money += p.money;
                      checkWin();
@@ -1210,10 +1223,22 @@
             } else { finishTurn(false); }
         }
 
-        // 우주 공항
         function handleSpaceTravel(isDouble) {
             const p = players[curP]; const columbia = boardData[32];
             if (!p || !columbia) return;
+
+            if (p.isAI) {
+                if (columbia.owner === curP || p.money >= 50) {
+                    p.inSpace = true;
+                    payAmount(columbia.owner === curP ? 0 : 20, columbia.owner, () => {
+                        localLog(`은하 연합 궤도선 정박 대기.`);
+                        finishTurn(false);
+                    });
+                } else {
+                    finishTurn(isDouble);
+                }
+                return;
+            }
 
             if (columbia.owner === curP) {
                 p.inSpace = true; localLog(`**컬럼비아호 특권**으로 전 대륙 무료 차세대 초정밀 워프 대기.`); finishTurn(false);
