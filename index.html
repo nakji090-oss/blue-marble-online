@@ -117,7 +117,6 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
 
-        /* 각 보드 칸 스타일링 */
         .cell {
             background-color: var(--cell-bg); 
             display: flex; 
@@ -160,22 +159,19 @@
         .color-black { border-top: 5px solid #1e293b; font-weight: 900; }
         .color-vehicle { background-color: #f0fdfa; }
 
-        /* 중앙 판 영역 */
         .center-space {
             grid-column: 2 / 11; grid-row: 2 / 11; background-color: #0b0f19;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-radius: 8px; position: relative; gap: 20px;
+            border-radius: 8px; position: relative; gap: 12px;
             border: 2px dashed #1e293b;
             overflow: hidden;
         }
         
-        /* 자전하는 3D 입체 지구본 */
         .globe-container {
-            position: absolute;
             width: 160px; height: 160px; border-radius: 50%;
             box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(56, 189, 248, 0.4);
             background: radial-gradient(circle at 30% 30%, #38bdf8 0%, #0369a1 50%, #0c4a6e 100%);
-            overflow: hidden; z-index: 1; opacity: 0.85;
+            overflow: hidden; z-index: 1; opacity: 0.85; margin-bottom: 5px;
         }
         .globe-map {
             width: 320px; height: 160px;
@@ -187,31 +183,30 @@
         .center-space h2 { color: #38bdf8; font-size: min(4vw, 36px); margin: 0; text-align: center; font-weight: 900; letter-spacing: -1px; z-index: 2; }
         .fund-display { font-size: 15px; font-weight: 800; color: #fbbf24; background: #1e293b; padding: 6px 16px; border-radius: 20px; border: 2px solid #fbbf24; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 2; }
 
-        /* 주사위 애니메이션 패널 */
-        .dice-panel { display: flex; gap: 15px; background: rgba(15, 23, 42, 0.8); padding: 12px 20px; border-radius: 12px; align-items: center; z-index: 2; border: 1px solid #334155; }
-        .dice { width: 52px; height: 52px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; box-shadow: 0 6px 12px rgba(0,0,0,0.3); color: #1e293b; border: 2px solid #cbd5e1; }
+        /* 주사위 패널 */
+        .dice-panel { display: flex; gap: 15px; background: rgba(15, 23, 42, 0.8); padding: 10px 15px; border-radius: 12px; align-items: center; z-index: 2; border: 1px solid #334155; }
+        .dice { width: 45px; height: 45px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; box-shadow: 0 6px 12px rgba(0,0,0,0.3); color: #1e293b; border: 2px solid #cbd5e1; }
         .rolling { animation: roll 0.4s infinite; }
         @keyframes roll { 0% { transform: rotate(0deg) scale(0.9); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg) scale(0.9); } }
 
-        .btn-roll-center { background-color: #ef4444; font-size: 20px; padding: 15px 32px; border-radius: 30px; border: 3px solid white; box-shadow: 0 6px 15px rgba(239,68,68,0.4); color: white; cursor: pointer; font-weight: 900; transition: all 0.2s; z-index: 2; }
+        .btn-roll-center { background-color: #ef4444; font-size: 18px; padding: 12px 28px; border-radius: 30px; border: 3px solid white; box-shadow: 0 6px 15px rgba(239,68,68,0.4); color: white; cursor: pointer; font-weight: 900; transition: all 0.2s; z-index: 2; }
         .btn-roll-center:hover { background-color: #dc2626; transform: scale(1.05); }
         .btn-roll-center:disabled { background-color: #475569; cursor: not-allowed; transform: none; box-shadow: none; border-color: #64748b; color: #94a3b8; }
 
-        /* 랜드마크 SVG 일러스트 배치 영역 */
-        .landmark-art { position: absolute; width: 76%; height: 48%; bottom: 24%; left: 12%; opacity: 0.8; z-index: 1; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .landmark-art { position: absolute; width: 76%; height: 48%; bottom: 24%; left: 12%; opacity: 0.5; z-index: 1; display: flex; align-items: center; justify-content: center; pointer-events: none; }
         .landmark-art svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
+        
+        /* 특수 칸 아트 전용 스타일 (크고 선명하게) */
+        .cell-special .landmark-art { opacity: 0.95; bottom: 15%; height: 60%; width: 80%; left: 10%; }
 
-        /* 플레이어 토큰 배치 (비행기 아이콘 최적화) */
         .players-wrap { position: absolute; bottom: 25px; left: 0; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; z-index: 6; }
         .player-token { width: min(4vw, 22px); height: min(4vw, 22px); display: flex; align-items: center; justify-content: center; transition: all 0.15s ease-out; }
-        .player-token svg { width: 100%; height: 100%; filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.7)); } /* 그림자 강화하여 시인성 향상 */
+        .player-token svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6)); }
         
-        /* 입체 건물 전용 영역 및 고유 스타일 */
         .buildings-wrap { position: absolute; top: 2px; width: 90%; display: flex; justify-content: center; gap: 2px; z-index: 3; }
         .bld-mini { width: 14px; height: 14px; display: inline-block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
         .bld-mini svg { width: 100%; height: 100%; }
 
-        /* 우측 정보 계기판 */
         .controls { flex: 1 1 300px; max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
         .player-card { background: #1e293b; padding: 12px 18px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #64748b; border: 1px solid #334155; transition: all 0.2s; position: relative;}
         .player-card.active { transform: scale(1.02); border-left-width: 8px; background: #334155; box-shadow: 0 8px 16px rgba(0,0,0,0.3); border-color: #475569; }
@@ -223,7 +218,6 @@
         #log { flex-grow: 1; min-height: 150px; max-height: 250px; overflow-y: auto; background: #0f172a; color: #38bdf8; padding: 12px; font-size: 13px; border-radius: 8px; font-family: monospace; border: 1px solid #334155; }
         #log p { margin: 4px 0; border-bottom: 1px dashed rgba(255,255,255,0.03); padding-bottom: 2px; }
 
-        /* 다이얼로그 모달 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px); }
         .modal { background: #1e293b; padding: 25px; border-radius: 16px; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; border: 1px solid #475569; color: #f8fafc; }
         .modal h3 { margin-top: 0; color: #38bdf8; font-weight: 800; font-size: 20px; }
@@ -242,7 +236,6 @@
         <p>글로벌 네트워크 보안 인증 정보 확인 중입니다.</p>
     </div>
 
-    <!-- 로비 및 모드 선택 -->
     <div class="screen-panel" id="lobby-screen" style="display: none;">
         <h2>부루마불 랜드마크 에디션 🌐</h2>
         <p>닉네임을 입력하고 게임 모드를 선택해 주세요.</p>
@@ -337,7 +330,7 @@
         let myPlayerIdx = -1;
         let isSinglePlay = false; 
 
-        // ⭐ 턴 무한 대기 버그 완벽 해결을 위한 상태 관리 변수 복구
+        // 턴 무한 대기 버그 해결을 위한 상태 관리 변수
         let isTurnExecuting = false;
         let aiTimeout = null;
 
@@ -351,7 +344,7 @@
         const formatMoney = (m) => new Intl.NumberFormat('ko-KR').format(m * 10000);
         const TYPES = { START: 0, CITY: 1, KEY: 2, ISLAND: 3, TRAVEL: 4, FUND_RECV: 5, FUND_PAY: 6, TAX: 7 };
 
-        // --- 🎵 오디오 엔진 ---
+        // --- STREAMING_CHUNK:Setting up Web Audio API ---
         let audioCtx = null;
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         function resumeAudioContext() { initAudio(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
@@ -380,7 +373,7 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.08);
         }
 
-        // 랜드마크 고품질 SVG 목록
+        // --- STREAMING_CHUNK:Defining SVG Arts ---
         const landmarkSVGs = {
             taipei: `<svg viewBox="0 0 100 100"><rect x="44" y="75" width="12" height="15" fill="#0284c7" opacity="0.8" /><polygon points="40,75 60,75 56,63 44,63" fill="#0369a1" /><polygon points="41,63 59,63 55,51 45,51" fill="#075985" /><polygon points="42,51 58,51 54,39 46,39" fill="#0c4a6e" /><polygon points="43,39 57,39 53,27 47,27" fill="#0f172a" /><line x1="50" y1="27" x2="50" y2="8" stroke="#38bdf8" stroke-width="3" /></svg>`,
             beijing: `<svg viewBox="0 0 100 100"><rect x="25" y="70" width="50" height="15" fill="#ef4444" /><polygon points="20,70 80,70 70,55 30,55" fill="#f59e0b" /><rect x="35" y="55" width="30" height="15" fill="#ef4444" /><polygon points="28,55 72,55 64,38 36,38" fill="#f59e0b" /><rect x="42" y="38" width="16" height="15" fill="#ef4444" /><polygon points="36,38 64,38 50,18" fill="#f59e0b" /></svg>`,
@@ -410,7 +403,15 @@
             rome: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="65" rx="42" ry="20" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><rect x="18" y="40" width="64" height="25" fill="#e2e8f0" stroke="#475569" /><rect x="25" y="45" width="8" height="15" rx="3" fill="#1e293b" /><rect x="46" y="45" width="8" height="15" rx="3" fill="#1e293b" /><rect x="67" y="45" width="8" height="15" rx="3" fill="#1e293b" /></svg>`,
             london: `<svg viewBox="0 0 100 100"><rect x="42" y="20" width="16" height="70" fill="#e2e8f0" stroke="#475569" stroke-width="1.5" /><polygon points="38,28 50,2 62,28" fill="#1e293b" /><circle cx="50" cy="38" r="4.5" fill="#fbbf24" stroke="#d97706" /></svg>`,
             newyork: `<svg viewBox="0 0 100 100"><rect x="44" y="65" width="12" height="25" fill="#94a3b8" stroke="#475569" /><path d="M46,20 L54,20 L56,65 L44,65 Z" fill="#2dd4bf" /><circle cx="50" cy="17" r="3.5" fill="#2dd4bf" /><path d="M53,16 L62,5" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" /><polygon points="47,15 42,12 47,17" fill="#14b8a6" /><polygon points="53,15 58,12 53,17" fill="#14b8a6" /></svg>`,
-            seoul: `<svg viewBox="0 0 100 100"><rect x="15" y="60" width="70" height="25" fill="#64748b" stroke="#334155" /><path d="M40,85 A10,10 0 0,1 60,85 Z" fill="#111827" /><polygon points="10,60 90,60 80,48 20,48" fill="#1e293b" /><rect x="25" y="48" width="50" height="12" fill="#b91c1c" /><polygon points="5,48 95,48 83,33 17,33" fill="#1e293b" /></svg>`
+            seoul: `<svg viewBox="0 0 100 100"><rect x="15" y="60" width="70" height="25" fill="#64748b" stroke="#334155" /><path d="M40,85 A10,10 0 0,1 60,85 Z" fill="#111827" /><polygon points="10,60 90,60 80,48 20,48" fill="#1e293b" /><rect x="25" y="48" width="50" height="12" fill="#b91c1c" /><polygon points="5,48 95,48 83,33 17,33" fill="#1e293b" /></svg>`,
+            
+            // 특수 칸 전용 일러스트레이션 
+            key_art: `<svg viewBox="0 0 100 100"><path d="M60,30 A15,15 0 1,0 45,55 L45,85 L55,85 L55,75 L65,75 L65,65 L55,65 L55,55 A15,15 0 0,0 60,30 Z" fill="#fbbf24" stroke="#d97706" stroke-width="2"/><circle cx="55" cy="40" r="4" fill="#fef08a"/></svg>`,
+            island_art: `<svg viewBox="0 0 100 100"><path d="M10,80 Q50,60 90,80" fill="#fcd34d"/><path d="M45,80 Q50,50 35,25 Q55,40 55,80" fill="#78350f"/><path d="M35,25 Q20,30 15,50 Q30,35 35,25" fill="#22c55e"/><path d="M35,25 Q40,10 60,15 Q45,25 35,25" fill="#15803d"/><path d="M35,25 Q55,20 70,40 Q45,35 35,25" fill="#16a34a"/></svg>`,
+            space_art: `<svg viewBox="0 0 100 100"><path d="M30,70 L45,45 L70,20 Q85,10 90,20 Q80,35 60,60 L30,70 Z" fill="#e2e8f0"/><polygon points="30,70 20,80 40,75" fill="#ef4444"/><polygon points="30,70 25,60 45,45" fill="#3b82f6"/><polygon points="30,70 40,75 60,60" fill="#3b82f6"/><circle cx="65" cy="35" r="5" fill="#0f172a"/></svg>`,
+            start_art: `<svg viewBox="0 0 100 100"><polygon points="20,20 80,50 20,80" fill="#ef4444"/><rect x="15" y="15" width="5" height="70" fill="#475569"/></svg>`,
+            fund_art: `<svg viewBox="0 0 100 100"><path d="M20,40 Q50,20 80,40 L70,80 Q50,90 30,80 Z" fill="#fbbf24" stroke="#d97706" stroke-width="2"/><text x="50" y="65" font-size="24" text-anchor="middle" font-weight="bold" fill="#fff">₩</text></svg>`,
+            tax_art: `<svg viewBox="0 0 100 100"><rect x="30" y="20" width="40" height="60" fill="#e2e8f0" stroke="#475569" stroke-width="2"/><line x1="40" y1="35" x2="60" y2="35" stroke="#94a3b8" stroke-width="3"/><line x1="40" y1="50" x2="60" y2="50" stroke="#94a3b8" stroke-width="3"/><circle cx="65" cy="70" r="12" fill="#ef4444"/><path d="M58,70 L72,70 M65,65 L65,75" stroke="#fff" stroke-width="3"/></svg>`
         };
 
         const buildingSVGs = {
@@ -419,31 +420,31 @@
             hotel: `<svg viewBox="0 0 120 120"><polygon points="60,10 20,35 60,60 100,35" fill="#f87171" stroke="#991b1b" stroke-width="3"/><polygon points="20,35 60,60 60,115 20,90" fill="#ef4444" stroke="#991b1b" stroke-width="3"/><polygon points="100,35 60,60 60,115 100,90" fill="#b91c1c" stroke="#991b1b" stroke-width="3"/><rect x="35" y="55" width="8" height="10" fill="#fbbf24"/><rect x="77" y="55" width="8" height="10" fill="#fbbf24"/></svg>`
         };
 
-        // ⭐ 40개 보드판 메인 데이터 (클래식 통행료)
+        // --- STREAMING_CHUNK:Setting up core data state ---
         const boardData = [
-            { name: "출발", type: TYPES.START }, // 0
+            { name: "출발", type: TYPES.START, art: "start_art" }, // 0
             { name: "타이베이", type: TYPES.CITY, color: "red", price: 5, build: [5, 15, 25], toll: [0.2, 1, 9, 25], art: "taipei" }, // 1
-            { name: "황금열쇠", type: TYPES.KEY }, // 2
+            { name: "황금열쇠", type: TYPES.KEY, art: "key_art" }, // 2
             { name: "베이징", type: TYPES.CITY, color: "red", price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45], art: "beijing" }, // 3
             { name: "마닐라", type: TYPES.CITY, color: "red", price: 8, build: [5, 15, 25], toll: [0.4, 2, 18, 45], art: "manila" }, // 4
             { name: "제주도", type: TYPES.CITY, color: "vehicle", price: 20, toll: [30], noBuild: true, art: "jeju" }, // 5
             { name: "싱가포르", type: TYPES.CITY, color: "red", price: 10, build: [10, 30, 50], toll: [0.6, 3, 27, 55], art: "singapore" }, // 6
-            { name: "황금열쇠", type: TYPES.KEY }, // 7
+            { name: "황금열쇠", type: TYPES.KEY, art: "key_art" }, // 7
             { name: "카이로", type: TYPES.CITY, color: "red", price: 10, build: [10, 30, 50], toll: [0.6, 3, 27, 55], art: "cairo" }, // 8
             { name: "이스탄불", type: TYPES.CITY, color: "red", price: 12, build: [10, 30, 50], toll: [0.8, 4, 30, 60], art: "istanbul" }, // 9
-            { name: "무인도", type: TYPES.ISLAND }, // 10
+            { name: "무인도", type: TYPES.ISLAND, art: "island_art" }, // 10
             { name: "아테네", type: TYPES.CITY, color: "yellow", price: 14, build: [15, 45, 75], toll: [1, 5, 45, 75], art: "athens" }, // 11
-            { name: "황금열쇠", type: TYPES.KEY }, // 12
+            { name: "황금열쇠", type: TYPES.KEY, art: "key_art" }, // 12
             { name: "코펜하겐", type: TYPES.CITY, color: "yellow", price: 16, build: [15, 45, 75], toll: [1.2, 6, 50, 90], art: "copenhagen" }, // 13
             { name: "스톡홀름", type: TYPES.CITY, color: "yellow", price: 16, build: [15, 45, 75], toll: [1.2, 6, 50, 90], art: "stockholm" }, // 14
             { name: "콩코드<br>여객기", type: TYPES.CITY, color: "vehicle", price: 20, toll: [30], noBuild: true, art: "concorde" }, // 15
             { name: "베른", type: TYPES.CITY, color: "yellow", price: 18, build: [15, 45, 75], toll: [1.4, 7, 50, 95], art: "bern" }, // 16
-            { name: "황금열쇠", type: TYPES.KEY }, // 17
+            { name: "황금열쇠", type: TYPES.KEY, art: "key_art" }, // 17
             { name: "베를린", type: TYPES.CITY, color: "yellow", price: 18, build: [15, 45, 75], toll: [1.4, 7, 50, 95], art: "berlin" }, // 18
             { name: "오타와", type: TYPES.CITY, color: "yellow", price: 20, build: [20, 60, 100], toll: [1.6, 8, 55, 100], art: "ottawa" }, // 19
-            { name: "사회복지<br>기금", type: TYPES.FUND_RECV }, // 20
+            { name: "사회복지<br>기금", type: TYPES.FUND_RECV, art: "fund_art" }, // 20
             { name: "부에노스<br>아이레스", type: TYPES.CITY, color: "green", price: 22, build: [20, 60, 100], toll: [1.8, 9, 70, 105], art: "buenos_aires" }, // 21
-            { name: "황금열쇠", type: TYPES.KEY }, // 22
+            { name: "황금열쇠", type: TYPES.KEY, art: "key_art" }, // 22
             { name: "상파울루", type: TYPES.CITY, color: "green", price: 24, build: [20, 60, 100], toll: [2, 10, 75, 110], art: "sao_paulo" }, // 23
             { name: "시드니", type: TYPES.CITY, color: "green", price: 24, build: [20, 60, 100], toll: [2, 10, 75, 110], art: "sydney" }, // 24
             { name: "부산", type: TYPES.CITY, color: "vehicle", price: 50, toll: [60], noBuild: true, art: "busan" }, // 25
@@ -451,19 +452,18 @@
             { name: "리스본", type: TYPES.CITY, color: "green", price: 26, build: [25, 75, 125], toll: [2.2, 11, 80, 115], art: "lisbon" }, // 27
             { name: "엘리자베스호", type: TYPES.CITY, color: "vehicle", price: 30, toll: [25], noBuild: true, art: "ship" }, // 28
             { name: "마드리드", type: TYPES.CITY, color: "green", price: 28, build: [25, 75, 125], toll: [2.4, 12, 85, 120], art: "madrid" }, // 29
-            { name: "우주여행", type: TYPES.TRAVEL }, // 30
+            { name: "우주여행", type: TYPES.TRAVEL, art: "space_art" }, // 30
             { name: "도쿄", type: TYPES.CITY, color: "blue", price: 30, build: [30, 90, 150], toll: [2.6, 13, 90, 127], art: "tokyo" }, // 31
             { name: "컬럼비아호", type: TYPES.CITY, color: "vehicle", price: 45, toll: [40], noBuild: true, art: "shuttle" }, // 32
             { name: "파리", type: TYPES.CITY, color: "blue", price: 32, build: [30, 90, 150], toll: [2.8, 15, 100, 140], art: "paris" }, // 33
             { name: "로마", type: TYPES.CITY, color: "blue", price: 32, build: [30, 90, 150], toll: [2.8, 15, 100, 140], art: "rome" }, // 34
-            { name: "황금열쇠", type: TYPES.KEY }, // 35
+            { name: "황금열쇠", type: TYPES.KEY, art: "key_art" }, // 35
             { name: "런던", type: TYPES.CITY, color: "blue", price: 35, build: [35, 105, 175], toll: [3.5, 17, 110, 150], art: "london" }, // 36
             { name: "뉴욕", type: TYPES.CITY, color: "blue", price: 35, build: [35, 105, 175], toll: [3.5, 17, 110, 150], art: "newyork" }, // 37
-            { name: "기금 납부", type: TYPES.TAX }, // 38
+            { name: "기금 납부", type: TYPES.TAX, art: "tax_art" }, // 38
             { name: "서울", type: TYPES.CITY, color: "black", price: 100, build: [50, 150, 250], toll: [200], noBuild: true, art: "seoul" } // 39
         ];
 
-        // 클래식 배열 통행료 징수 시스템
         function getToll(cellIdx) {
             const c = boardData[cellIdx];
             if (!c || c.type !== TYPES.CITY) return 0;
@@ -476,9 +476,9 @@
             return c.toll[0];
         }
 
-        // 초기화
         boardData.forEach(cell => { cell.owner = null; cell.buildings = [0, 0, 0]; });
 
+        // --- STREAMING_CHUNK:Authentication and Lobby logic ---
         onAuthStateChanged(auth, user => {
             if(user) {
                 userId = user.uid;
@@ -503,7 +503,6 @@
             document.getElementById('lobby-screen').style.display = 'block';
         };
 
-        // --- 🎮 싱글 플레이 모드 ---
         window.startSingleGame = () => {
             resumeAudioContext(); 
             const nameInput = document.getElementById('input-nickname').value.trim();
@@ -520,7 +519,7 @@
                 { uid: userId, name: userName, color: colors[0], money: 300, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, isAI: false }
             ];
 
-            const aiNames = ['알파고🤖', '제미나이🤖', '챗GPT🤖'];
+            const aiNames = ['알파고🤖', '바둑이🤖', '챗GPT🤖'];
             for (let i = 1; i < totalPlayers; i++) {
                 players.push({
                     uid: 'ai' + i, 
@@ -546,7 +545,6 @@
             });
         };
 
-        // --- 🌐 온라인 멀티플레이 ---
         window.createRoom = async () => {
             resumeAudioContext();
             const nameInput = document.getElementById('input-nickname').value.trim();
@@ -625,7 +623,7 @@
             await updateDoc(roomRef, { status: 'playing', players: initPlayers, logs: [...state.logs, "글로벌 매치 기동!"] });
         };
 
-        // --- ⭐ 공통 동기화 엔진 및 렌더링 ---
+        // --- STREAMING_CHUNK:Network Sync and UI Rendering ---
         function syncFromNetwork(state) {
             players = state.players || []; 
             curP = state.curP !== undefined ? state.curP : 0; 
@@ -649,7 +647,6 @@
             if (players[curP]) {
                 document.getElementById('header-turn-info').innerText = `[ ${players[curP].name} 차례 ]`;
             }
-            document.getElementById('fund-amount').innerText = formatMoney(socialFund);
 
             const rollBtn = document.getElementById('btn-roll-center');
             const activePlayer = players[curP];
@@ -657,7 +654,7 @@
             if (rollBtn) {
                 if (activePlayer && activePlayer.isAI) {
                     rollBtn.disabled = true;
-                    rollBtn.innerText = "컴퓨터 생각 중...";
+                    rollBtn.innerText = "컴퓨터 판단 중...";
                     
                     if ((isSinglePlay || isHost) && !isTurnExecuting) {
                         clearTimeout(aiTimeout);
@@ -670,7 +667,7 @@
                             rollBtn.innerText = "주사위 굴리기 🎲";
                         } else {
                             rollBtn.disabled = true;
-                            rollBtn.innerText = "내 차례 진행 중...";
+                            rollBtn.innerText = "이동 중...";
                         }
                     }
                 } else {
@@ -724,6 +721,8 @@
                     if(i % 10 === 0) cell.classList.add('corner');
                     if(data.type === TYPES.KEY) cell.classList.add('gold-key');
                     if(data.color) cell.classList.add(`color-${data.color}`);
+                    // 특수 칸에는 추가 클래스 부여 (일러스트 크기 최적화용)
+                    if(data.type !== TYPES.CITY) cell.classList.add('cell-special');
                     cell.id = `cell-${i}`;
                     
                     let row, col;
@@ -735,15 +734,18 @@
                     boardEl.appendChild(cell);
                 });
                 
+                // 요청사항: 중앙 레이아웃 순서 변경 (지구본 -> 타이틀 -> 버튼 -> 주사위)
                 const center = document.createElement('div');
                 center.className = 'center-space';
                 center.innerHTML = `
+                    <div class="globe-container"><div class="globe-map"></div></div>
+                    <h2>BLUE MARBLE</h2>
+                    <div class="fund-display">사회복지기금: <span id="fund-amount">0</span></div>
+                    <button id="btn-roll-center" class="btn-roll-center" onclick="handleDiceClick()">주사위 굴리기</button>
                     <div class="dice-panel">
                         <div class="dice" id="dice1">1</div>
                         <div class="dice" id="dice2">1</div>
                     </div>
-                    <button id="btn-roll-center" class="btn-roll-center" onclick="handleDiceClick()">주사위 굴리기</button>
-                    <div class="globe-container"><div class="globe-map"></div></div>
                 `;
                 boardEl.appendChild(center);
                 boardInit = true;
@@ -756,6 +758,7 @@
                 let title = `<div class="cell-name">${data.name}</div>`;
                 let priceHtml = '';
 
+                // 구매된 도시에만 하단 배경색 적용 (일러스트 보존)
                 if (data.type === TYPES.CITY) {
                     if (data.owner !== null && data.owner !== undefined && players[data.owner]) {
                         priceHtml = `<div class="cell-price" style="background-color:${players[data.owner].color}; color:#ffffff; border-top:none; font-weight:900;">${formatMoney(getToll(i))}</div>`;
@@ -764,7 +767,7 @@
                     }
                     cell.style.backgroundColor = 'var(--cell-bg)';
                 } else if (data.type === TYPES.FUND_RECV) {
-                    priceHtml = `<div class="cell-price" style="color:#d97706; background:rgba(255,255,255,0.8);">${formatMoney(socialFund)}</div>`;
+                    priceHtml = `<div class="cell-price" style="color:#d97706; background:rgba(255,255,255,0.85);">${formatMoney(socialFund)}</div>`;
                 }
 
                 let bStr = '';
@@ -774,6 +777,7 @@
                     if(data.buildings[2]) bStr += `<span class="bld-mini">${buildingSVGs.hotel}</span>`;
                 }
 
+                // 랜드마크 및 특수 칸 일러스트 렌더링
                 let artHtml = '';
                 if (data.art && landmarkSVGs[data.art]) {
                     artHtml = `<div class="landmark-art">${landmarkSVGs[data.art]}</div>`;
@@ -782,7 +786,7 @@
                 cell.innerHTML = title + artHtml + priceHtml + `<div class="buildings-wrap">${bStr}</div><div class="players-wrap" id="players-${i}"></div>`;
             });
 
-            // 비행기 토큰 렌더링
+            // 플레이어 비행기 토큰 안착
             players.forEach((p, idx) => {
                 if(!p || p.isBankrupt) return;
                 const wrap = document.getElementById(`players-${p.pos}`);
@@ -816,7 +820,7 @@
             });
         }
 
-        // --- 🤖 AI & 주사위 엔진 ---
+        // --- STREAMING_CHUNK:AI Logic and Core Mechanics ---
         function executeAILogic() {
             try {
                 if (isTurnExecuting) return;
@@ -827,12 +831,14 @@
 
                 if (ai.islandTurns > 0) {
                     rollAnimation((d1, d2) => {
-                        if (d1 === d2) {
-                            localLog(`더블(${d1},${d2}) 기적으로 무인도를 즉시 탈출합니다!`);
-                            ai.islandTurns = 0; movePlayerAnimated(d1 + d2, true);
-                        } else {
-                            ai.islandTurns--; localLog(`무인도에서 사색 중 (${d1},${d2}). 남은 수감 기간: ${ai.islandTurns}턴`); finishTurn(false);
-                        }
+                        try {
+                            if (d1 === d2) {
+                                localLog(`더블(${d1},${d2}) 기적으로 무인도를 즉시 탈출합니다!`);
+                                ai.islandTurns = 0; movePlayerAnimated(d1 + d2, true);
+                            } else {
+                                ai.islandTurns--; localLog(`무인도에서 사색 중 (${d1},${d2}). 남은 기간: ${ai.islandTurns}턴`); finishTurn(false);
+                            }
+                        } catch(e) { console.error(e); finishTurn(false); }
                     });
                     return;
                 }
@@ -850,12 +856,14 @@
                 }
 
                 rollAnimation((d1, d2) => {
-                    localLog(`주사위 구동: ${d1}, ${d2} (총합 ${d1+d2}칸 전진) ${d1===d2?'[더블]':''}`);
-                    movePlayerAnimated(d1 + d2, d1 === d2);
+                    try {
+                        localLog(`주사위 구동: ${d1}, ${d2} (총합 ${d1+d2}칸 전진) ${d1===d2?'[더블]':''}`);
+                        movePlayerAnimated(d1 + d2, d1 === d2);
+                    } catch(e) { console.error(e); finishTurn(false); }
                 });
             } catch (error) {
                 console.error("AI 에러:", error);
-                finishTurn(false); 
+                finishTurn(false); // 완벽 복구
             }
         }
 
@@ -870,8 +878,10 @@
             
             if (p.islandTurns > 0) {
                 rollAnimation((d1, d2) => {
-                    if (d1 === d2) { localLog(`더블(${d1},${d2})로 무인도 완벽 탈출!`); p.islandTurns = 0; movePlayerAnimated(d1 + d2, true); } 
-                    else { p.islandTurns--; localLog(`무인도 대기 (${d1},${d2}). 남은 턴: ${p.islandTurns}`); finishTurn(false); }
+                    try {
+                        if (d1 === d2) { localLog(`더블(${d1},${d2})로 무인도 완벽 탈출!`); p.islandTurns = 0; movePlayerAnimated(d1 + d2, true); } 
+                        else { p.islandTurns--; localLog(`무인도 대기 (${d1},${d2}). 남은 턴: ${p.islandTurns}`); finishTurn(false); }
+                    } catch(e) { console.error(e); finishTurn(false); }
                 });
                 return;
             }
@@ -879,14 +889,17 @@
             if (p.inSpace) { showSpaceTravelDestinations(); return; }
 
             rollAnimation((d1, d2) => {
-                localLog(`주사위: ${d1}, ${d2} (${d1+d2}칸 행군) ${d1===d2?'[더블]':''}`);
-                movePlayerAnimated(d1 + d2, d1 === d2);
+                try {
+                    localLog(`주사위: ${d1}, ${d2} (${d1+d2}칸 전진) ${d1===d2?'[더블]':''}`);
+                    movePlayerAnimated(d1 + d2, d1 === d2);
+                } catch(e) { console.error(e); finishTurn(false); }
             });
         };
 
         function rollAnimation(callback) {
             playDiceSound(); 
             const d1El = document.getElementById('dice1'); const d2El = document.getElementById('dice2');
+            if(!d1El || !d2El) return;
             d1El.classList.add('rolling'); d2El.classList.add('rolling');
             let interval = setInterval(() => { d1El.innerText = Math.floor(Math.random() * 6) + 1; d2El.innerText = Math.floor(Math.random() * 6) + 1; }, 50);
             setTimeout(() => {
@@ -897,43 +910,47 @@
         }
 
         async function movePlayerAnimated(amount, isDouble, force = false) {
-            const p = players[curP]; if (!p) return;
-            
-            if (force) {
-                let newPos = (p.pos + amount + 40) % 40;
-                if (newPos < p.pos && newPos !== 10) { p.money += 20; localLog(`출발선 통과! 월급 20만원 수령.`); }
-                p.pos = newPos; playMoveSound(); renderBoard(); await uploadGameState(); handleCellAction(isDouble);
-                return;
-            }
+            try {
+                const p = players[curP]; if (!p) return;
+                
+                if (force) {
+                    let newPos = (p.pos + amount + 40) % 40;
+                    if (newPos < p.pos && newPos !== 10) { p.money += 20; localLog(`출발선 통과! 월급 20만원 수령.`); }
+                    p.pos = newPos; playMoveSound(); renderBoard(); await uploadGameState(); handleCellAction(isDouble);
+                    return;
+                }
 
-            let stepsLeft = amount;
-            while (stepsLeft > 0) {
-                p.pos = (p.pos + 1) % 40;
-                if (p.pos === 0) { p.money += 20; localLog(`출발선 통과! 월급 20만원 수령.`); }
-                playMoveSound(); renderBoard();
-                await new Promise(resolve => setTimeout(resolve, 200)); 
-                stepsLeft--;
-            }
+                let stepsLeft = amount;
+                while (stepsLeft > 0) {
+                    p.pos = (p.pos + 1) % 40;
+                    if (p.pos === 0) { p.money += 20; localLog(`출발선 통과! 월급 20만원 수령.`); }
+                    playMoveSound(); renderBoard();
+                    await new Promise(resolve => setTimeout(resolve, 200)); 
+                    stepsLeft--;
+                }
 
-            handleCellAction(isDouble);
+                handleCellAction(isDouble);
+            } catch(e) { console.error(e); finishTurn(false); }
         }
 
         function handleCellAction(isDouble) {
-            const p = players[curP]; const cell = boardData[p.pos]; if (!p || !cell) return;
+            try {
+                const p = players[curP]; const cell = boardData[p.pos]; if (!p || !cell) return;
 
-            if (cell.type === TYPES.START) { finishTurn(isDouble); }
-            else if (cell.type === TYPES.ISLAND) { localLog(`무인도 격리 조치.`); p.islandTurns = 3; finishTurn(false); }
-            else if (cell.type === TYPES.TAX || cell.type === TYPES.FUND_PAY) {
-                if (p.isAI) { payAmount(15, 'fund', () => { localLog(`복지 기금 15만원 납부 완료.`); finishTurn(isDouble); }); } 
-                else { showModal("사회복지기금 청구", `기금으로 ${formatMoney(15)}을 자동 지불합니다.`, [{ text: "지불", onClick: () => payAmount(15, 'fund', () => { localLog(`기금 15만원 지불 완료.`); finishTurn(isDouble); })}]); }
-            }
-            else if (cell.type === TYPES.FUND_RECV) {
-                if(socialFund > 0) { p.money += socialFund; localLog(`사회복지기금 ${formatMoney(socialFund)} 전액 환수!`); socialFund = 0; }
-                finishTurn(isDouble);
-            }
-            else if (cell.type === TYPES.TRAVEL) { handleSpaceTravel(isDouble); }
-            else if (cell.type === TYPES.KEY) { drawKey(isDouble); }
-            else if (cell.type === TYPES.CITY) { handleCity(cell, isDouble); }
+                if (cell.type === TYPES.START) { finishTurn(isDouble); }
+                else if (cell.type === TYPES.ISLAND) { localLog(`무인도 불시착.`); p.islandTurns = 3; finishTurn(false); }
+                else if (cell.type === TYPES.TAX || cell.type === TYPES.FUND_PAY) {
+                    if (p.isAI) { payAmount(15, 'fund', () => { localLog(`복지 기금 15만원 자동 납부.`); finishTurn(isDouble); }); } 
+                    else { showModal("사회복지기금 청구", `기금으로 ${formatMoney(15)}을 자동 지불합니다.`, [{ text: "지불", onClick: () => payAmount(15, 'fund', () => { localLog(`기금 15만원 지불 완료.`); finishTurn(isDouble); })}]); }
+                }
+                else if (cell.type === TYPES.FUND_RECV) {
+                    if(socialFund > 0) { p.money += socialFund; localLog(`사회복지기금 ${formatMoney(socialFund)} 전액 환수!`); socialFund = 0; }
+                    finishTurn(isDouble);
+                }
+                else if (cell.type === TYPES.TRAVEL) { handleSpaceTravel(isDouble); }
+                else if (cell.type === TYPES.KEY) { drawKey(isDouble); }
+                else if (cell.type === TYPES.CITY) { handleCity(cell, isDouble); }
+            } catch(e) { console.error(e); finishTurn(false); }
         }
 
         function handleCity(cell, isDouble) {
@@ -998,6 +1015,7 @@
             }
         }
 
+        // --- STREAMING_CHUNK:Bankruptcy and Special events ---
         function showSellModal(debt, toIdx, successCb) {
             const p = players[curP]; if (!p) return;
             
@@ -1080,15 +1098,20 @@
         }
 
         async function finishTurn(isDouble) {
-            if (isDouble && players[curP] && players[curP].islandTurns === 0 && !players[curP].inSpace) { 
-                localLog(`더블 작렬! 작전 기회 연속 확보.`); 
-            } else { 
-                let limit = 0; 
-                do { curP = (curP + 1) % players.length; limit++; } while (players[curP] && players[curP].isBankrupt && limit < 10); 
+            try {
+                if (isDouble && players[curP] && players[curP].islandTurns === 0 && !players[curP].inSpace) { 
+                    localLog(`더블 작렬! 작전 기회 연속 확보.`); 
+                } else { 
+                    let limit = 0; 
+                    do { curP = (curP + 1) % players.length; limit++; } while (players[curP] && players[curP].isBankrupt && limit < 10); 
+                }
+                
+                isTurnExecuting = false; // 안전 잠금 해제
+                await uploadGameState(); 
+            } catch(e) {
+                console.error("Turn finish error", e);
+                isTurnExecuting = false;
             }
-            
-            isTurnExecuting = false; // 턴 흐름 잠금 해제 (버그 완전 방지)
-            await uploadGameState(); 
         }
 
         function checkWin() {
