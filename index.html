@@ -390,7 +390,6 @@
         const formatMoney = (m) => new Intl.NumberFormat('ko-KR').format(m * 10000) + '원';
         const TYPES = { START: 0, CITY: 1, KEY: 2, ISLAND: 3, TRAVEL: 4, FUND_RECV: 5, FUND_PAY: 6, TAX: 7 };
 
-        // --- 🎵 Web Audio API 기반 사양 오디오 엔진 ---
         let audioCtx = null;
 
         function initAudio() {
@@ -485,7 +484,6 @@
             seoul: `<svg viewBox="0 0 100 100"><rect x="15" y="60" width="70" height="25" fill="#64748b" stroke="#334155" /><path d="M40,85 A10,10 0 0,1 60,85 Z" fill="#111827" /><polygon points="10,60 90,60 80,48 20,48" fill="#1e293b" /><rect x="25" y="48" width="50" height="12" fill="#b91c1c" /><polygon points="5,48 95,48 83,33 17,33" fill="#1e293b" /></svg>`
         };
 
-        // 입체 건물 SVG 빌더 (3D 이소메트릭)
         const buildingSVGs = {
             villa: `<svg viewBox="0 0 120 120">
                 <polygon points="60,20 20,50 60,80 100,50" fill="#4ade80" stroke="#166534" stroke-width="3"/>
@@ -553,6 +551,12 @@
             { name: "국세청", type: TYPES.TAX },
             { name: "서울", type: TYPES.CITY, color: 'black', price: 100, toll: [200], noBuild: true, art: 'seoul' }
         ];
+
+        // 모든 영토에 기본적으로 null 소유주 및 빈 건물을 사전 매핑하여 Javascript 오류 원천 방어
+        boardData.forEach(cell => {
+            cell.owner = null;
+            cell.buildings = [0, 0, 0];
+        });
 
         // 대기 화면 초기 설정
         onAuthStateChanged(auth, user => {
@@ -1079,7 +1083,6 @@
             }
         }
 
-        // 자산 매각 및 파산 보강
         function showSellModal(debt, toIdx, successCb) {
             const p = players[curP];
             if (!p) return;
@@ -1207,7 +1210,7 @@
             } else { finishTurn(false); }
         }
 
-        // 우주공항 제어
+        // 우주 공항
         function handleSpaceTravel(isDouble) {
             const p = players[curP]; const columbia = boardData[32];
             if (!p || !columbia) return;
