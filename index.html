@@ -268,13 +268,11 @@
 </head>
 <body>
 
-    <!-- 1. 로딩 대기창 -->
     <div class="screen-panel" id="auth-screen">
         <h2>서버 연결 중...</h2>
         <p>글로벌 네트워크 보안 인증 정보 확인 중입니다.</p>
     </div>
 
-    <!-- 2. 게임 모드 선택 로비 -->
     <div class="screen-panel" id="lobby-screen" style="display: none;">
         <h2>부루마불 랜드마크 에디션 🌐</h2>
         <p>게임 모드를 선택해 주세요.</p>
@@ -286,7 +284,6 @@
         <button class="btn-secondary" onclick="showOnlineJoin()">온라인 방 참여하기</button>
     </div>
 
-    <!-- 2-B. 온라인 개설 폼 -->
     <div class="screen-panel" id="online-create-panel" style="display: none;">
         <h2>방 만들기</h2>
         <p>방을 생성하면 4자리 대기 번호가 생성됩니다.</p>
@@ -294,7 +291,6 @@
         <button class="btn-secondary" style="background:#475569;" onclick="backToLobby()">뒤로가기</button>
     </div>
 
-    <!-- 2-C. 온라인 가입 폼 -->
     <div class="screen-panel" id="online-join-panel" style="display: none;">
         <h2>방 참여하기</h2>
         <p>생성된 4자리 대기실 번호를 정확히 적어주세요.</p>
@@ -303,7 +299,6 @@
         <button class="btn-secondary" style="background:#475569;" onclick="backToLobby()">뒤로가기</button>
     </div>
 
-    <!-- 3. 대기실 -->
     <div class="screen-panel" id="waiting-screen" style="display: none;">
         <h2>대기실 (코드: <span id="display-roomcode" style="color:#fbbf24;"></span>)</h2>
         <p>함께 대전할 플레이어들이 들어오면 시작하세요.</p>
@@ -312,7 +307,6 @@
         <p id="waiting-msg" style="color:#94a3b8; font-size:14px; font-weight: 700;">방장이 게임을 개시할 때까지 대기해주세요...</p>
     </div>
 
-    <!-- 4. 게임 화면 -->
     <div class="game-screen" id="game-screen">
         <div class="header-bar">
             <span id="header-mode-info">방 번호: -</span>
@@ -344,7 +338,6 @@
         </div>
     </div>
 
-    <!-- 범용 팝업 다이얼로그 -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal" id="modal-content">
             <h3 id="modal-title">알림</h3>
@@ -569,6 +562,12 @@
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('lobby-screen').style.display = 'block';
             }
+        });
+
+        // ⭐ 파이어베이스 익명 로그인 호출 (추가됨) ⭐
+        signInAnonymously(auth).catch((error) => {
+            console.error("인증 실패:", error);
+            document.getElementById('auth-screen').innerHTML = "<h2>연결 실패</h2><p>서버 접속에 문제가 발생했습니다. 새로고침 해주세요.</p>";
         });
 
         window.showOnlineSetup = () => {
