@@ -135,6 +135,8 @@
         @media (min-width: 800px) { .cell { font-size: 10px; } }
 
         .cell-name { font-weight: 800; font-size: 1.05em; line-height: 1.1; word-break: keep-all; z-index: 2; margin-top: 5px; padding: 0 2px; }
+        
+        /* 금액/통행료 하단 밴드 */
         .cell-price { 
             font-size: min(1.5vw, 9.5px); 
             font-weight: 850; 
@@ -181,7 +183,6 @@
         @keyframes rotateGlobe { 0% { background-position: 0px 0; } 100% { background-position: -320px 0; } }
 
         .center-space h2 { color: #38bdf8; font-size: min(4vw, 36px); margin: 0; text-align: center; font-weight: 900; letter-spacing: -1px; z-index: 2; }
-        .fund-display { font-size: 15px; font-weight: 800; color: #fbbf24; background: #1e293b; padding: 6px 16px; border-radius: 20px; border: 2px solid #fbbf24; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 2; }
 
         /* 주사위 패널 */
         .dice-panel { display: flex; gap: 15px; background: rgba(15, 23, 42, 0.8); padding: 10px 15px; border-radius: 12px; align-items: center; z-index: 2; border: 1px solid #334155; }
@@ -193,7 +194,8 @@
         .btn-roll-center:hover { background-color: #dc2626; transform: scale(1.05); }
         .btn-roll-center:disabled { background-color: #475569; cursor: not-allowed; transform: none; box-shadow: none; border-color: #64748b; color: #94a3b8; }
 
-        .landmark-art { position: absolute; width: 76%; height: 48%; bottom: 24%; left: 12%; opacity: 0.5; z-index: 1; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        /* 랜드마크 선명도 대폭 향상 */
+        .landmark-art { position: absolute; width: 76%; height: 48%; bottom: 24%; left: 12%; opacity: 0.95; z-index: 1; display: flex; align-items: center; justify-content: center; pointer-events: none; }
         .landmark-art svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
         
         /* 특수 칸 아트 전용 스타일 (크고 선명하게) */
@@ -203,8 +205,9 @@
         .player-token { width: min(4vw, 22px); height: min(4vw, 22px); display: flex; align-items: center; justify-content: center; transition: all 0.15s ease-out; }
         .player-token svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6)); }
         
-        .buildings-wrap { position: absolute; top: 2px; width: 90%; display: flex; justify-content: center; gap: 2px; z-index: 3; }
-        .bld-mini { width: 14px; height: 14px; display: inline-block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
+        /* 입체 건물 사이즈업 (잘 보이게) */
+        .buildings-wrap { position: absolute; top: 2px; width: 90%; display: flex; justify-content: center; gap: 4px; z-index: 4; }
+        .bld-mini { width: 18px; height: 18px; display: inline-block; filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.5)); }
         .bld-mini svg { width: 100%; height: 100%; }
 
         .controls { flex: 1 1 300px; max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
@@ -344,7 +347,7 @@
         const formatMoney = (m) => new Intl.NumberFormat('ko-KR').format(m * 10000);
         const TYPES = { START: 0, CITY: 1, KEY: 2, ISLAND: 3, TRAVEL: 4, FUND_RECV: 5, FUND_PAY: 6, TAX: 7 };
 
-        // --- STREAMING_CHUNK:Setting up Web Audio API ---
+        // --- 🎵 오디오 엔진 ---
         let audioCtx = null;
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
         function resumeAudioContext() { initAudio(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
@@ -373,7 +376,7 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.08);
         }
 
-        // --- STREAMING_CHUNK:Defining SVG Arts ---
+        // SVG 명승지 일러스트
         const landmarkSVGs = {
             taipei: `<svg viewBox="0 0 100 100"><rect x="44" y="75" width="12" height="15" fill="#0284c7" opacity="0.8" /><polygon points="40,75 60,75 56,63 44,63" fill="#0369a1" /><polygon points="41,63 59,63 55,51 45,51" fill="#075985" /><polygon points="42,51 58,51 54,39 46,39" fill="#0c4a6e" /><polygon points="43,39 57,39 53,27 47,27" fill="#0f172a" /><line x1="50" y1="27" x2="50" y2="8" stroke="#38bdf8" stroke-width="3" /></svg>`,
             beijing: `<svg viewBox="0 0 100 100"><rect x="25" y="70" width="50" height="15" fill="#ef4444" /><polygon points="20,70 80,70 70,55 30,55" fill="#f59e0b" /><rect x="35" y="55" width="30" height="15" fill="#ef4444" /><polygon points="28,55 72,55 64,38 36,38" fill="#f59e0b" /><rect x="42" y="38" width="16" height="15" fill="#ef4444" /><polygon points="36,38 64,38 50,18" fill="#f59e0b" /></svg>`,
@@ -420,7 +423,6 @@
             hotel: `<svg viewBox="0 0 120 120"><polygon points="60,10 20,35 60,60 100,35" fill="#f87171" stroke="#991b1b" stroke-width="3"/><polygon points="20,35 60,60 60,115 20,90" fill="#ef4444" stroke="#991b1b" stroke-width="3"/><polygon points="100,35 60,60 60,115 100,90" fill="#b91c1c" stroke="#991b1b" stroke-width="3"/><rect x="35" y="55" width="8" height="10" fill="#fbbf24"/><rect x="77" y="55" width="8" height="10" fill="#fbbf24"/></svg>`
         };
 
-        // --- STREAMING_CHUNK:Setting up core data state ---
         const boardData = [
             { name: "출발", type: TYPES.START, art: "start_art" }, // 0
             { name: "타이베이", type: TYPES.CITY, color: "red", price: 5, build: [5, 15, 25], toll: [0.2, 1, 9, 25], art: "taipei" }, // 1
@@ -478,7 +480,6 @@
 
         boardData.forEach(cell => { cell.owner = null; cell.buildings = [0, 0, 0]; });
 
-        // --- STREAMING_CHUNK:Authentication and Lobby logic ---
         onAuthStateChanged(auth, user => {
             if(user) {
                 userId = user.uid;
@@ -519,7 +520,7 @@
                 { uid: userId, name: userName, color: colors[0], money: 300, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, isAI: false }
             ];
 
-            const aiNames = ['알파고🤖', '잼나이🤖', '챗GPT🤖'];
+            const aiNames = ['알파고🤖', '바둑이🤖', '챗GPT🤖'];
             for (let i = 1; i < totalPlayers; i++) {
                 players.push({
                     uid: 'ai' + i, 
@@ -623,7 +624,6 @@
             await updateDoc(roomRef, { status: 'playing', players: initPlayers, logs: [...state.logs, "글로벌 매치 기동!"] });
         };
 
-        // --- STREAMING_CHUNK:Network Sync and UI Rendering ---
         function syncFromNetwork(state) {
             players = state.players || []; 
             curP = state.curP !== undefined ? state.curP : 0; 
@@ -647,7 +647,7 @@
             if (players[curP]) {
                 document.getElementById('header-turn-info').innerText = `[ ${players[curP].name} 차례 ]`;
             }
-
+            
             const rollBtn = document.getElementById('btn-roll-center');
             const activePlayer = players[curP];
 
@@ -721,8 +721,10 @@
                     if(i % 10 === 0) cell.classList.add('corner');
                     if(data.type === TYPES.KEY) cell.classList.add('gold-key');
                     if(data.color) cell.classList.add(`color-${data.color}`);
+                    
                     // 특수 칸에는 추가 클래스 부여 (일러스트 크기 최적화용)
                     if(data.type !== TYPES.CITY) cell.classList.add('cell-special');
+                    
                     cell.id = `cell-${i}`;
                     
                     let row, col;
@@ -734,7 +736,7 @@
                     boardEl.appendChild(cell);
                 });
                 
-                // 요청사항: 중앙 레이아웃 순서 변경 (지구본 -> 타이틀 -> 버튼 -> 주사위)
+                // 요청사항: 중앙 레이아웃 순서 변경 (지구본 -> 타이틀 -> 주사위 버튼 -> 주사위)
                 const center = document.createElement('div');
                 center.className = 'center-space';
                 center.innerHTML = `
@@ -758,7 +760,6 @@
                 let title = `<div class="cell-name">${data.name}</div>`;
                 let priceHtml = '';
 
-                // 구매된 도시에만 하단 배경색 적용 (일러스트 보존)
                 if (data.type === TYPES.CITY) {
                     if (data.owner !== null && data.owner !== undefined && players[data.owner]) {
                         priceHtml = `<div class="cell-price" style="background-color:${players[data.owner].color}; color:#ffffff; border-top:none; font-weight:900;">${formatMoney(getToll(i))}</div>`;
@@ -820,7 +821,7 @@
             });
         }
 
-        // --- STREAMING_CHUNK:AI Logic and Core Mechanics ---
+        // --- 🤖 완벽 복구망을 씌운 AI 엔진 ---
         function executeAILogic() {
             try {
                 if (isTurnExecuting) return;
@@ -1015,7 +1016,6 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Bankruptcy and Special events ---
         function showSellModal(debt, toIdx, successCb) {
             const p = players[curP]; if (!p) return;
             
