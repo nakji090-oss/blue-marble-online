@@ -241,20 +241,13 @@
 
     <div class="screen-panel" id="lobby-screen" style="display: none;">
         <h2>부루마불 랜드마크 에디션 🌐</h2>
-        <p>게임 모드를 선택해 주세요.</p>
+        <p>닉네임을 입력하고 게임 모드를 선택해 주세요.</p>
         <input type="text" id="input-nickname" placeholder="내 닉네임 입력" value="대부호">
         
-        <select id="select-players" style="margin-bottom: 15px;">
-            <option value="2">2인 플레이</option>
-            <option value="3">3인 플레이</option>
-            <option value="4" selected>4인 플레이</option>
-        </select>
-        
-        <button class="btn-purple" onclick="startLocalGame(true)">싱글 플레이 (vs 인공지능)</button>
-        <button class="btn-secondary" onclick="startLocalGame(false)">로컬 멀티 (한 기기로 같이)</button>
+        <button class="btn-purple" onclick="startSingleGame()">싱글 플레이 (vs 인공지능 3명)</button>
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #334155;">
-        <button class="btn-primary" onclick="showOnlineSetup()">🌐 온라인 방 만들기</button>
-        <button class="btn-primary" style="background:#0369a1;" onclick="showOnlineJoin()">🌐 온라인 방 참여</button>
+        <button class="btn-primary" onclick="showOnlineSetup()">온라인 멀티플레이 방 만들기</button>
+        <button class="btn-secondary" onclick="showOnlineJoin()">온라인 방 참여하기</button>
     </div>
 
     <div class="screen-panel" id="online-create-panel" style="display: none;">
@@ -311,8 +304,8 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // ⭐ 파이어베이스 설정 반영
-        const firebaseConfig = {
+        // ⭐ 파이어베이스 설정: 이 부분을 반드시 본인의 프로젝트 키값으로 변경해주세요!
+       const firebaseConfig = {
             apiKey: "AIzaSyArjDU8g5xz6P_gRwN1o3A0RglFgtRuD4A",
             authDomain: "burumbul-online.firebaseapp.com",
             projectId: "burumbul-online",
@@ -332,6 +325,7 @@
         let roomRef = null;
         let isHost = false;
         let myPlayerIdx = -1;
+        let isSinglePlay = false; 
 
         let players = [];
         let curP = 0;
@@ -472,77 +466,50 @@
             }
         });
 
-        signInAnonymously(auth).catch((error) => {
-            console.error("인증 실패:", error);
-            document.getElementById('auth-screen').innerHTML = "<h2>연결 실패</h2><p>서버 접속에 문제가 발생했습니다. 새로고침 해주세요.</p>";
-        });
-
+        // ⭐ 버튼 액션 연결 (HTML에서 접근할 수 있도록 window 객체에 할당)
         window.showOnlineSetup = () => {
             resumeAudioContext();
             document.getElementById('lobby-screen').style.display = 'none';
             document.getElementById('online-create-panel').style.display = 'block';
         };
+        
         window.showOnlineJoin = () => {
             resumeAudioContext();
             document.getElementById('lobby-screen').style.display = 'none';
             document.getElementById('online-join-panel').style.display = 'block';
         };
+        
         window.backToLobby = () => {
             document.getElementById('online-create-panel').style.display = 'none';
             document.getElementById('online-join-panel').style.display = 'none';
             document.getElementById('lobby-screen').style.display = 'block';
         };
 
-        // 온라인 상태 여부 확인 함수
-        function isOnlineGame() {
-            return roomRef !== null;
-        }
-
-        // --- 오프라인 기반 (싱글 / 로컬 멀티) 엔진 ---
-        window.startLocalGame = (isVsAI) => {
+        // ⭐ 1. 싱글 플레이 (나 vs 인공지능 3명) 모드 시작 로직
+        window.startSingleGame = () => {
             resumeAudioContext(); 
             const nameInput = document.getElementById('input-nickname').value.trim();
             userName = nameInput ? nameInput : "대부호";
             
-            roomRef = null; // 오프라인 모드 플래그
+            isSinglePlay = true;
+            roomRef = null; 
             myPlayerIdx = 0; 
-            isSinglePlay = isVsAI;
 
-            const totalPlayers = parseInt(document.getElementById('select-players').value);
-
-            players = [];
-            players.push({ uid: 'p1', name: userName, color: colors[0], money: 300, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, isAI: false });
-
-            const aiNames = ['알파고🤖', '바둑이🤖', '챗GPT🤖'];
-            const humanNames = ['플레이어2', '플레이어3', '플레이어4'];
-            
-            for (let i = 1; i < totalPlayers; i++) {
-                players.push({
-                    uid: 'p' + (i+1), 
-                    name: isVsAI ? aiNames[i-1] : humanNames[i-1], 
-                    color: colors[i], 
-                    money: 300, 
-                    pos: 0, 
-                    islandTurns: 0, 
-                    isBankrupt: false, 
-                    items: {free_pass:0, island_card:0}, 
-                    inSpace: false, 
-                    isAI: isVsAI 
-                });
-            }
+            players = [
+                { uid: userId, name: userName, color: colors[0], money: 300, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, isAI: false },
+                { uid: 'ai1', name: '알파고🤖', color: colors[1], money: 300, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, isAI: true },
+                { uid: 'ai2', name: '바둑이🤖', color: colors[2], money: 300, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, isAI: true },
+                { uid: 'ai3', name: '챗GPT🤖', color: colors[3], money: 300, pos: 0, islandTurns: 0, isBankrupt: false, items: {free_pass:0, island_card:0}, inSpace: false, isAI: true }
+            ];
 
             curP = 0; socialFund = 0; deck = createDeck();
-            gameLogs = [
-                isVsAI ? "싱글플레이 모드 시작!" : "로컬 멀티플레이 시작!", 
-                "화면을 클릭하여 사운드를 활성화하세요."
-            ];
+            gameLogs = ["싱글플레이 모드 시작!", "마우스로 클릭하여 배경 사운드를 활성화하세요."];
 
             boardData.forEach(cell => { cell.owner = null; cell.buildings = [0, 0, 0]; });
 
             document.getElementById('lobby-screen').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
-            
-            document.getElementById('header-mode-info').innerText = isVsAI ? `싱글 플레이 (${totalPlayers}인전)` : `로컬 플레이 (${totalPlayers}인전)`;
+            document.getElementById('header-mode-info').innerText = "싱글 플레이 (vs AI 3명)";
             document.getElementById('header-nickname').innerText = userName;
 
             syncFromNetwork({
@@ -551,11 +518,12 @@
             });
         };
 
-        // --- 멀티플레이어 온라인 (방 만들기/참여) ---
+        // ⭐ 2. 온라인 멀티플레이 방 만들기
         window.createRoom = async () => {
             resumeAudioContext();
             const nameInput = document.getElementById('input-nickname').value.trim();
             userName = nameInput ? nameInput : "대부호";
+            isSinglePlay = false;
 
             roomCode = Math.floor(1000 + Math.random() * 9000).toString();
             roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
@@ -571,12 +539,14 @@
             listenToRoom();
         };
 
+        // ⭐ 3. 온라인 멀티플레이 방 참여
         window.joinRoom = async () => {
             resumeAudioContext();
             const nameInput = document.getElementById('input-nickname').value.trim();
             const codeInput = document.getElementById('input-roomcode').value.trim();
             if(!codeInput) return alertMsg("방 코드를 올바르게 입력해주세요.");
             userName = nameInput ? nameInput : "대부호";
+            isSinglePlay = false;
 
             roomCode = codeInput;
             roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
@@ -611,7 +581,7 @@
                 } else {
                     document.getElementById('waiting-screen').style.display = 'none';
                     document.getElementById('game-screen').style.display = 'flex';
-                    document.getElementById('header-mode-info').innerText = `온라인 방 번호: ${roomCode}`;
+                    document.getElementById('header-mode-info').innerText = `온라인 (방: ${roomCode})`;
                     syncFromNetwork(state);
                 }
             });
@@ -643,7 +613,7 @@
                 });
             }
 
-            // ⭐ 버그 픽스: DOM(주사위 버튼 등)을 먼저 화면에 그려줍니다.
+            // ⭐ UI 렌더링이 먼저 실행되도록 보장합니다.
             renderBoard(); 
             renderPanel(); 
             renderLogs();
@@ -659,8 +629,8 @@
                 if (activePlayer && activePlayer.isAI) {
                     rollBtn.disabled = true;
                     rollBtn.innerText = "컴퓨터 생각 중...";
-                    if (!isOnlineGame() || isHost) setTimeout(executeAILogic, 1200);
-                } else if (!isOnlineGame() || (isOnlineGame() && curP === myPlayerIdx)) {
+                    if (isSinglePlay || isHost) setTimeout(executeAILogic, 1200);
+                } else if (isSinglePlay || curP === myPlayerIdx) {
                     if (activePlayer && !activePlayer.isBankrupt) {
                         rollBtn.disabled = false;
                         rollBtn.innerText = "주사위 굴리기 🎲";
@@ -671,15 +641,18 @@
                 }
             }
 
-            if (isOnlineGame() && curP === myPlayerIdx && activePlayer && activePlayer.isBankrupt) {
-                let limit = 0;
-                do { curP = (curP + 1) % players.length; limit++; } while (players[curP] && players[curP].isBankrupt && limit < 10);
-                uploadGameState();
+            // 파산자 차례 건너뛰기
+            if (activePlayer && activePlayer.isBankrupt) {
+                if (isSinglePlay || (isHost && activePlayer.isAI) || curP === myPlayerIdx) {
+                    let limit = 0;
+                    do { curP = (curP + 1) % players.length; limit++; } while (players[curP] && players[curP].isBankrupt && limit < 10);
+                    uploadGameState();
+                }
             }
         }
 
         async function uploadGameState() {
-            if (!isOnlineGame()) {
+            if (isSinglePlay) {
                 syncFromNetwork({
                     players, curP, socialFund, deck, logs: gameLogs,
                     boardState: boardData.map(c => ({owner: c.owner, buildings: c.buildings}))
@@ -722,6 +695,7 @@
                     boardEl.appendChild(cell);
                 });
                 
+                // 중앙 공간 강제 생성 (버튼 포함)
                 const center = document.createElement('div');
                 center.className = 'center-space';
                 center.innerHTML = `
@@ -775,6 +749,7 @@
                 cell.innerHTML = title + iconHtml + artHtml + priceHtml + `<div class="buildings-wrap">${bStr}</div><div class="players-wrap" id="players-${i}"></div>`;
             });
 
+            // 플레이어 말 안착
             players.forEach((p, idx) => {
                 if(!p || p.isBankrupt) return;
                 const wrap = document.getElementById(`players-${p.pos}`);
@@ -797,7 +772,7 @@
                     if(p.items.free_pass > 0) inv.push(`우대권x${p.items.free_pass}`);
                     if(p.items.island_card > 0) inv.push(`무전기x${p.items.island_card}`);
                 }
-                let isMyTag = (isOnlineGame() && idx === myPlayerIdx) || (!isOnlineGame() && !p.isAI);
+                let isMyTag = (!isSinglePlay && idx === myPlayerIdx) || (isSinglePlay && !p.isAI);
                 pInfo.innerHTML += `
                     <div class="player-card ${idx === curP ? 'active' : ''}" style="border-left-color: ${p.color}">
                         ${isMyTag ? '<div class="my-tag">나</div>' : ''}
@@ -807,6 +782,7 @@
             });
         }
 
+        // --- 🤖 인공지능(AI) 주사위 굴리기 및 의사결정 엔진 ---
         function executeAILogic() {
             const ai = players[curP];
             if (!ai || !ai.isAI || ai.isBankrupt) return;
@@ -844,7 +820,7 @@
         window.handleDiceClick = () => {
             const p = players[curP];
             if (!p || p.isAI) return;
-            if (isOnlineGame() && curP !== myPlayerIdx) return; // 멀티일때 남의 턴 방지
+            if (!isSinglePlay && curP !== myPlayerIdx) return; // 온라인일 때 남의 턴 조작 방지
 
             document.getElementById('btn-roll-center').disabled = true;
             
@@ -976,6 +952,7 @@
             }
         }
 
+        // --- 파산 및 자산 매각 ---
         function showSellModal(debt, toIdx, successCb) {
             const p = players[curP]; if (!p) return;
             
@@ -998,13 +975,13 @@
 
                 for (let asset of assetsToSell) {
                     if (p.money >= debt) break; p.money += asset.val;
-                    if (asset.type === 'full') { boardData[asset.id].owner = null; boardData[asset.id].buildings = [0,0,0]; localLog(`파산 방어를 위해 ${boardData[asset.id].name} 영토 전체를 제값 매각 처분했습니다.`); } 
-                    else { if (boardData[asset.id].buildings) { boardData[asset.id].buildings[asset.bIdx] = 0; } localLog(`파산 방어를 위해 ${boardData[asset.id].name}의 건물을 강제 철거 회수했습니다.`); }
+                    if (asset.type === 'full') { boardData[asset.id].owner = null; boardData[asset.id].buildings = [0,0,0]; localLog(`파산 방어를 위해 ${boardData[asset.id].name} 매각.`); } 
+                    else { if (boardData[asset.id].buildings) { boardData[asset.id].buildings[asset.bIdx] = 0; } localLog(`파산 방어를 위해 ${boardData[asset.id].name} 건물 강제 철거.`); }
                 }
 
                 if (p.money >= debt) { payAmount(debt, toIdx, successCb); } 
                 else {
-                    localLog(`보유 부동산을 전부 매각했으나 한계에 봉착하여 결국 파산했습니다.`); p.isBankrupt = true;
+                    localLog(`부동산 매각 한계 봉착. 최종 파산.`); p.isBankrupt = true;
                     boardData.forEach(c => { if(c.owner === curP) c.owner = (toIdx === 'fund' ? null : toIdx); });
                     if(toIdx !== null && toIdx !== 'fund' && players[toIdx]) players[toIdx].money += p.money; checkWin();
                 }
@@ -1013,7 +990,7 @@
 
             const refresh = () => {
                 if (p.money >= debt) { document.getElementById('modal-overlay').style.display = 'none'; payAmount(debt, toIdx, successCb); return; }
-                let html = `<p style="color:#ef4444; font-weight:bold;">필요 세금: ${formatMoney(debt)} / 긴급 융통가능 잔고: ${formatMoney(p.money)}</p>`; let exist = false;
+                let html = `<p style="color:#ef4444; font-weight:bold;">필요 세금: ${formatMoney(debt)} / 긴급 잔고: ${formatMoney(p.money)}</p>`; let exist = false;
                 boardData.forEach((c, idx) => {
                     if (c.owner === curP) {
                         exist = true; let bNames = []; let bVal = 0;
@@ -1024,15 +1001,15 @@
                         }
                         let total = c.price + bVal;
                         html += `<div class="sell-item">
-                            <div><b>${c.name}</b> (영지 전결)<br><small>제값 매각액: ${formatMoney(total)}</small></div>
-                            <button class="btn-danger" style="padding:8px;" onclick="globalSell('full', ${idx}, ${total})">통합 매각</button>
+                            <div><b>${c.name}</b> (영지 전결)<br><small>매각액: ${formatMoney(total)}</small></div>
+                            <button class="btn-danger" style="padding:8px;" onclick="window.globalSell('full', ${idx}, ${total})">통합 매각</button>
                         </div>`;
                         if (bNames.length > 0) {
                             let top = (c.buildings && c.buildings[2]) ? 2 : ((c.buildings && c.buildings[1]) ? 1 : 0);
                             let bPrice = c.build[top]; let bName = top === 2 ? '호텔' : (top === 1 ? '빌딩' : '별장');
                             html += `<div class="sell-item" style="background:#334155;">
                                 <div>└ [철거] <b>${bName}</b> 단독 매각<br><small>회수액: ${formatMoney(bPrice)}</small></div>
-                                <button class="btn-danger" style="padding:8px;" onclick="globalSell('bld', ${idx}, ${bPrice}, ${top})">철거 매각</button>
+                                <button class="btn-danger" style="padding:8px;" onclick="window.globalSell('bld', ${idx}, ${bPrice}, ${top})">철거 매각</button>
                             </div>`;
                         }
                     }
@@ -1135,7 +1112,7 @@
             }
         }
 
-        function showModal(title, bodyHtml, btns) {
+        window.showModal = function(title, bodyHtml, btns) {
             document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = bodyHtml;
             const wrap = document.getElementById('modal-buttons'); wrap.innerHTML = '';
             btns.forEach(b => {
@@ -1144,7 +1121,8 @@
             });
             document.getElementById('modal-overlay').style.display = 'flex';
         }
-        function alertMsg(m) { showModal("경고 및 알림", `<p>${m}</p>`, [{ text: "확인", onClick:()=>{} }]); }
+        window.alertMsg = function(m) { showModal("경고 및 알림", `<p>${m}</p>`, [{ text: "확인", onClick:()=>{} }]); }
+
     </script>
 </body>
 </html>
