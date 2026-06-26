@@ -135,20 +135,15 @@
         @media (min-width: 800px) { .cell { font-size: 10px; } }
 
         .cell-name { font-weight: 800; font-size: 1.05em; line-height: 1.1; word-break: keep-all; z-index: 2; margin-top: 5px; padding: 0 2px; }
-        
-        /* 금액/통행료 하단 밴드 */
         .cell-price { 
             font-size: min(1.5vw, 9.5px); 
             font-weight: 850; 
             color: #475569; 
             z-index: 5; 
-            width: 100%;
-            padding: 4px 2px;
             text-align: center;
-            background-color: rgba(255, 255, 255, 0.85); 
-            border-top: 1px solid #e2e8f0;
             transition: all 0.2s;
             margin-top: auto; 
+            margin-bottom: 3px;
             position: relative;
         }
         
@@ -183,9 +178,9 @@
         @keyframes rotateGlobe { 0% { background-position: 0px 0; } 100% { background-position: -320px 0; } }
 
         .center-space h2 { color: #38bdf8; font-size: min(4vw, 36px); margin: 0; text-align: center; font-weight: 900; letter-spacing: -1px; z-index: 2; }
-
-        /* 주사위 패널 */
-        .dice-panel { display: flex; gap: 15px; background: rgba(15, 23, 42, 0.8); padding: 10px 15px; border-radius: 12px; align-items: center; z-index: 2; border: 1px solid #334155; }
+        
+        /* 자전하는 3D 입체 지구본 */
+        .globe-container {
         .dice { width: 45px; height: 45px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; box-shadow: 0 6px 12px rgba(0,0,0,0.3); color: #1e293b; border: 2px solid #cbd5e1; }
         .rolling { animation: roll 0.4s infinite; }
         @keyframes roll { 0% { transform: rotate(0deg) scale(0.9); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg) scale(0.9); } }
@@ -288,7 +283,18 @@
 
         <div class="board-container">
             <div class="board" id="board">
-                <!-- Javascript로 동적 렌더링 됩니다 -->
+                <div class="center-space">
+                    <div class="globe-container">
+                        <div class="globe-map"></div>
+                    </div>
+                    <h2>BLUE MARBLE</h2>
+                    
+                    <div class="dice-panel">
+                        <div class="dice" id="dice1">1</div>
+                        <div class="dice" id="dice2">1</div>
+                    </div>
+                    <button id="btn-roll-center" class="btn-roll-center" onclick="handleDiceClick()">주사위 굴리기</button>
+                </div>
             </div>
         </div>
 
@@ -647,7 +653,7 @@
             if (players[curP]) {
                 document.getElementById('header-turn-info').innerText = `[ ${players[curP].name} 차례 ]`;
             }
-            
+
             const rollBtn = document.getElementById('btn-roll-center');
             const activePlayer = players[curP];
 
@@ -736,18 +742,16 @@
                     boardEl.appendChild(cell);
                 });
                 
-                // 요청사항: 중앙 레이아웃 순서 변경 (지구본 -> 타이틀 -> 주사위 버튼 -> 주사위)
                 const center = document.createElement('div');
                 center.className = 'center-space';
                 center.innerHTML = `
                     <div class="globe-container"><div class="globe-map"></div></div>
                     <h2>BLUE MARBLE</h2>
-                    <div class="fund-display">사회복지기금: <span id="fund-amount">0</span></div>
-                    <button id="btn-roll-center" class="btn-roll-center" onclick="handleDiceClick()">주사위 굴리기</button>
                     <div class="dice-panel">
                         <div class="dice" id="dice1">1</div>
                         <div class="dice" id="dice2">1</div>
                     </div>
+                    <button id="btn-roll-center" class="btn-roll-center" onclick="handleDiceClick()">주사위 굴리기</button>
                 `;
                 boardEl.appendChild(center);
                 boardInit = true;
@@ -762,13 +766,13 @@
 
                 if (data.type === TYPES.CITY) {
                     if (data.owner !== null && data.owner !== undefined && players[data.owner]) {
-                        priceHtml = `<div class="cell-price" style="background-color:${players[data.owner].color}; color:#ffffff; border-top:none; font-weight:900;">${formatMoney(getToll(i))}</div>`;
+                        priceHtml = `<div class="cell-price" style="background-color:${players[data.owner].color}; color:#ffffff; padding:2px 6px; border-radius:4px; box-shadow: 0 1px 3px rgba(0,0,0,0.4); font-weight:900;">${formatMoney(getToll(i))}</div>`;
                     } else {
                         priceHtml = `<div class="cell-price">${formatMoney(data.price)}</div>`;
                     }
                     cell.style.backgroundColor = 'var(--cell-bg)';
                 } else if (data.type === TYPES.FUND_RECV) {
-                    priceHtml = `<div class="cell-price" style="color:#d97706; background:rgba(255,255,255,0.85);">${formatMoney(socialFund)}</div>`;
+                    priceHtml = `<div class="cell-price" style="color:#d97706; font-weight:900;">기금: ${formatMoney(socialFund)}</div>`;
                 }
 
                 let bStr = '';
